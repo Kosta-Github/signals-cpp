@@ -5,7 +5,7 @@
 #    define SIGNALS_API __declspec(dllexport)
 #  else // defined(signals_cpp_EXPORTS)
 #    define SIGNALS_API __declspec(dllimport)
-#    pragma comment(lib, "http-cpp.lib")
+#    pragma comment(lib, "signals-cpp.lib")
 #  endif // defined(signals_cpp_EXPORTS)
 #else // defined(WIN32)
 #  define SIGNALS_API

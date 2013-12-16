@@ -5,6 +5,8 @@ message("configure: signals-cpp library")
 
 add_library(
 	signals-cpp SHARED
-	signals-cpp.cpp
+	connection.hpp
 	signals-cpp.hpp
+	signal.hpp
+	signal.cpp
 )

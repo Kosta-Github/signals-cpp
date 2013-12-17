@@ -3,25 +3,16 @@
 #include <signals-cpp/connections.hpp>
 #include <signals-cpp/signal.hpp>
 
-
-struct StructWithSignal {
-    StructWithSignal()  { std::cout << "StructWithSignal: ctor()" << std::endl; }
-    ~StructWithSignal() { std::cout << "StructWithSignal: dtor()" << std::endl; }
-
-public:
-    signals::signal<void(int value)> signalIntValue;
-};
-
 CATCH_TEST_CASE(
     "test a single simple connection",
     "[signals][connection][connect]"
 ) {
-    StructWithSignal a;
+    signals::signal<void(int v)> sig;
 
     int value = 0;
-    a.signalIntValue.connect([&](int v) { value = v; });
+    sig.connect([&](int v) { value = v; });
 
-    a.signalIntValue.emit(42);
+    sig.emit(42);
     CATCH_CHECK(value == 42);
 }
 
@@ -29,17 +20,17 @@ CATCH_TEST_CASE(
     "test to disconnect a single simple connection",
     "[signals][connection][disconnection]"
 ) {
-    StructWithSignal a;
+    signals::signal<void(int v)> sig;
 
     int value = 0;
-    auto conn = a.signalIntValue.connect([&](int v) { value = v; });
+    auto conn = sig.connect([&](int v) { value = v; });
 
-    a.signalIntValue.emit(42);
+    sig.emit(42);
     CATCH_CHECK(value == 42);
 
-    CATCH_CHECK(a.signalIntValue.disconnect(conn));
-    CATCH_CHECK_FALSE(a.signalIntValue.disconnect(conn)); // cannot be removed a second time
-    a.signalIntValue.emit(84);
+    CATCH_CHECK(sig.disconnect(conn));
+    CATCH_CHECK_FALSE(sig.disconnect(conn)); // cannot be removed a second time
+    sig.emit(84);
     CATCH_CHECK(value == 42); // still needs to be 42, since we disconnected
 }
 
@@ -47,29 +38,29 @@ CATCH_TEST_CASE(
     "test to check the existance of a connection",
     "[signals][connection][exists]"
 ) {
-    StructWithSignal a;
+    signals::signal<void(int v)> sig;
 
-    auto connTrue = a.signalIntValue.connect([&](int) { });
+    auto connTrue = sig.connect([&](int) { });
     auto connFalse = signals::connection();
 
-    CATCH_CHECK(a.signalIntValue.connected(connTrue));
-    CATCH_CHECK_FALSE(a.signalIntValue.connected(connFalse));
+    CATCH_CHECK(sig.connected(connTrue));
+    CATCH_CHECK_FALSE(sig.connected(connFalse));
 
-    CATCH_CHECK(a.signalIntValue.disconnect(connTrue));
-    CATCH_CHECK_FALSE(a.signalIntValue.connected(connTrue));
+    CATCH_CHECK(sig.disconnect(connTrue));
+    CATCH_CHECK_FALSE(sig.connected(connTrue));
 }
 
 CATCH_TEST_CASE(
     "test multiple simple connections",
     "[signals][connection]"
 ) {
-    StructWithSignal a;
+    signals::signal<void(int v)> sig;
 
     int value1 = 0, value2 = 0;
-    a.signalIntValue.connect([&](int v) { value1 = v;     });
-    a.signalIntValue.connect([&](int v) { value2 = v * 2; });
+    sig.connect([&](int v) { value1 = v;     });
+    sig.connect([&](int v) { value2 = v * 2; });
 
-    a.signalIntValue.emit(42);
+    sig.emit(42);
     CATCH_CHECK(value1 == 42);
     CATCH_CHECK(value2 == 84);
 }
@@ -78,19 +69,19 @@ CATCH_TEST_CASE(
     "test the connections mediator",
     "[signals][connections]"
 ) {
-    StructWithSignal a;
+    signals::signal<void(int v)> sig;
     signals::connections conns;
 
     int value1 = 0, value2 = 0;
-    conns.connect(a.signalIntValue, [&](int v) { value1 = v;     });
-    conns.connect(a.signalIntValue, [&](int v) { value2 = v * 2; });
+    conns.connect(sig, [&](int v) { value1 = v;     });
+    conns.connect(sig, [&](int v) { value2 = v * 2; });
 
-    a.signalIntValue.emit(42);
+    sig.emit(42);
     CATCH_CHECK(value1 == 42);
     CATCH_CHECK(value2 == 84);
 
     conns.disconnect_all();
-    a.signalIntValue.emit(21);
+    sig.emit(21);
     CATCH_CHECK(value1 == 42); // should be the same as above
     CATCH_CHECK(value2 == 84); // should be the same as above
 }

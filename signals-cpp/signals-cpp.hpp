@@ -13,9 +13,16 @@
 
 #if defined(_MSC_VER) && (_MSC_VER <= 1800)
 #  define SIGNALS_CPP_NOEXCEPT throw()
-#  define SIGNALS_CPP_NEED_EXPLICIT_MOVE
 #else // defined(_MSC_VER) && (_MSC_VER <= 1800)
 #  define SIGNALS_CPP_NOEXCEPT noexcept
 #endif // defined(_MSC_VER) && (_MSC_VER <= 1800)
+
+#if defined(_MSC_VER) && (_MSC_VER <= 1800)
+#  define SIGNALS_CPP_NEED_EXPLICIT_MOVE
+#endif // defined(_MSC_VER) && (_MSC_VER <= 1800)
+
+#if !defined(_MSC_VER) || (_MSC_VER >= 1800)
+#  define SIGNALS_CPP_HAS_VARIADIC_TEMPLATES
+#endif // !defined(_MSC_VER) || (_MSC_VER >= 1800)
 
 namespace signals { }

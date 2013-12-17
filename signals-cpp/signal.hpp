@@ -2,6 +2,7 @@
 
 #include "connection.hpp"
 
+#include <algorithm>
 #include <cassert>
 #include <functional>
 #include <memory>
@@ -13,60 +14,174 @@ namespace signals {
     template<typename SIGNATURE>
     struct signal {
 
+        signal()  { }
         ~signal() { disconnect_all(); }
 
         connection connect(std::function<SIGNATURE> target) {
             assert(target);
 
-            std::lock_guard<std::mutex> lock(m_targets_mutex);
+            // lock the mutex for writing
+            std::lock_guard<std::mutex> lock(m_write_targets_mutex);
+            auto new_targets = std::make_shared<std::vector<connection_target>>();
 
-            m_targets.emplace_back(connection(std::make_shared<bool>(true)), std::move(target));
-            return m_targets.back().conn;
+            // copy existing and still active targets
+            if(auto t = m_targets) {
+                std::copy_if(
+                    t->begin(), t->end(),
+                    std::back_inserter(*new_targets),
+                    [](connection_target const& i) { return i.conn.connected(); }
+                );
+            }
+
+            // add the new target to the new vector
+            auto conn = connection(std::make_shared<std::atomic<bool>>(true));
+            new_targets->emplace_back(conn, std::move(target));
+
+            // replace the pointer to the targets (in a thread safe manner)
+            m_targets = new_targets;
+
+            return conn;
         }
 
+#if defined(SIGNALS_CPP_HAS_VARIADIC_TEMPLATES)
+
+        template<typename OBJ, typename... ARGS>
+        connection connect(OBJ* obj, void (OBJ::*method)(ARGS... args)) {
+            assert(obj);
+            assert(method);
+            return connect([=](ARGS... args) { (obj->*method)(args...); });
+        }
+
+#else // defined(SIGNALS_CPP_HAS_VARIADIC_TEMPLATES)
+
+        template<typename OBJ>
+        connection connect(OBJ* obj, void (OBJ::*method)()) {
+            assert(obj);
+            assert(method);
+            return connect([=]() { (obj->*method)(); });
+        }
+
+        template<typename OBJ, typename ARG1>
+        connection connect(OBJ* obj, void (OBJ::*method)(ARG1 arg1)) {
+            assert(obj);
+            assert(method);
+            return connect([=](ARG1 arg1) { (obj->*method)(arg1); });
+        }
+
+        template<typename OBJ, typename ARG1, typename ARG2>
+        connection connect(OBJ* obj, void (OBJ::*method)(ARG1 arg1, ARG2 arg2)) {
+            assert(obj);
+            assert(method);
+            return connect([=](ARG1 arg1, ARG2 arg2) { (obj->*method)(arg1, arg2); });
+        }
+
+        template<typename OBJ, typename ARG1, typename ARG2, typename ARG3>
+        connection connect(OBJ* obj, void (OBJ::*method)(ARG1 arg1, ARG2 arg2, ARG3 arg3)) {
+            assert(obj);
+            assert(method);
+            return connect([=](ARG1 arg1, ARG2 arg2, ARG3 arg3) { (obj->*method)(arg1, arg2, arg3); });
+        }
+
+#endif // defined(SIGNALS_CPP_HAS_VARIADIC_TEMPLATES)
+
         bool disconnect(connection conn) {
-            std::lock_guard<std::mutex> lock(m_targets_mutex);
+            if(!conn.connected()) { return false; }
 
-            auto found = find(conn, m_targets);
-            if(found == m_targets.end()) { return false; }
+            // lock the mutex for writing
+            std::lock_guard<std::mutex> lock(m_write_targets_mutex);
 
-            conn.disconnect();
-            m_targets.erase(found);
+            // try to find the matching target
+            if(auto t = m_targets) {
+                auto found = find(conn, *t);
+                if(found != t->end()) {
 
-            return true;
+                    // disconnect the connection but keep it in the targets list
+                    conn.disconnect();
+
+                    return true;
+                }
+            }
+
+            // not found
+            return false;
         }
 
         void disconnect_all() {
-            std::lock_guard<std::mutex> lock(m_targets_mutex);
+            // lock the mutex for writing
+            std::lock_guard<std::mutex> lock(m_write_targets_mutex);
 
-            for(auto&& i : m_targets) { i.conn.disconnect(); }
-            m_targets.clear();
+            // disconnect all targets
+            if(auto t = m_targets) {
+                // clean out the targets pointer so no other thread
+                // will emit this signal anymore (running emit calls
+                // might still reference the targets)
+                m_targets = nullptr;
+
+                // and mark all connected connections as being disconnected
+                for(auto&& i : *t) { i.conn.disconnect(); }
+            }
         }
 
         bool connected(connection conn) const {
-            std::lock_guard<std::mutex> lock(m_targets_mutex);
+            // if the connection is not connected to something it cannot
+            // be connected this signal
+            if(!conn.connected()) { return false; }
 
-            return (find(conn, m_targets) != m_targets.end());
+            // check if we can find the requested connection in the list of
+            // stored connections
+            if(auto t = m_targets) {
+                return (find(conn, *t) != t->end());
+            }
+
+            return false;
         }
 
         void emit() const {
-            for(auto& i : copy_targets()) { if(i.conn.connected()) { i.target(); } }
+            if(auto t = m_targets) {
+                for(auto& i : *t) { if(i.conn.connected()) { i.target(); } }
+            }
         }
 
         template<typename ARG1>
         void emit(ARG1 const& arg1) const {
-            for(auto& i : copy_targets()) { if(i.conn.connected()) { i.target(arg1); } }
+            if(auto t = m_targets) {
+                for(auto& i : *t) { if(i.conn.connected()) { i.target(arg1); } }
+            }
         }
 
         template<typename ARG1, typename ARG2>
         void emit(ARG1 const& arg1, ARG1 const& arg2) const {
-            for(auto& i : copy_targets()) { if(i.conn.connected()) { i.target(arg1, arg2); } }
+            if(auto t = m_targets) {
+                for(auto& i : *t) { if(i.conn.connected()) { i.target(arg1, arg2); } }
+            }
         }
 
         template<typename ARG1, typename ARG2, typename ARG3>
         void emit(ARG1 const& arg1, ARG1 const& arg2, ARG1 const& arg3) const {
-            for(auto& i : copy_targets()) { if(i.conn.connected()) { i.target(arg1, arg2, arg3); } }
+            if(auto t = m_targets) {
+                for(auto& i : *t) { if(i.conn.connected()) { i.target(arg1, arg2, arg3); } }
+            }
         }
+
+#if defined(SIGNALS_CPP_NEED_EXPLICIT_MOVE)
+    public:
+        signal(signal&& o) SIGNALS_CPP_NOEXCEPT :
+            m_write_targets_mutex(std::move(o.m_write_targets_mutex)),
+            m_targets(std::move(o.m_targets))
+        { }
+
+        signal& operator=(signal&& o) SIGNALS_CPP_NOEXCEPT {
+            if(this != &other) {
+                m_write_targets_mutex = std::move(o.m_write_targets_mutex);
+                m_targets = std::move(o.m_targets);
+            }
+            return *this;
+        }
+#endif // defined(SIGNALS_CPP_NEED_EXPLICIT_MOVE)
+
+    private:
+        signal(signal const& o); // = delete;
+        signal& operator=(signal const& o); // = delete;
 
     private:
         struct connection_target {
@@ -76,22 +191,11 @@ namespace signals {
             std::function<SIGNATURE> target;
         };
 
-        mutable std::mutex m_targets_mutex;
-        std::vector<connection_target> m_targets;
-
-        // creates a copy of the currently registered connections under a lock of
-        // the mutex; this is used to avoid potential dead-lock situations in case
-        // of connecting a new target or disconnecting an existing connection during
-        // the execution of the emit() action.
-        auto copy_targets() const -> decltype(m_targets) {
-            std::lock_guard<std::mutex> lock(m_targets_mutex);
-
-            return m_targets;
-        }
+        mutable std::mutex m_write_targets_mutex;
+        std::shared_ptr<std::vector<connection_target>> m_targets;
 
         template<typename CONT>
         static auto find(connection conn, CONT&& cont) -> decltype(cont.begin()) {
-            // assumes that the mutex has been locked already!
             return std::find_if(
                 cont.begin(), cont.end(),
                 [&](connection_target const& i) { return (i.conn == conn); }

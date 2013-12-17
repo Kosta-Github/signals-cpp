@@ -136,6 +136,17 @@ namespace signals {
             return false;
         }
 
+#if defined(SIGNALS_CPP_HAS_VARIADIC_TEMPLATES)
+
+        template<typename... ARGS>
+        void emit(ARGS... const& args) const {
+            if(auto t = m_targets) {
+                for(auto& i : *t) { if(i.conn.connected()) { i.target(args...); } }
+            }
+        }
+
+#else // defined(SIGNALS_CPP_HAS_VARIADIC_TEMPLATES)
+
         void emit() const {
             if(auto t = m_targets) {
                 for(auto& i : *t) { if(i.conn.connected()) { i.target(); } }
@@ -162,6 +173,8 @@ namespace signals {
                 for(auto& i : *t) { if(i.conn.connected()) { i.target(arg1, arg2, arg3); } }
             }
         }
+
+#endif // defined(SIGNALS_CPP_HAS_VARIADIC_TEMPLATES)
 
 #if defined(SIGNALS_CPP_NEED_EXPLICIT_MOVE)
     public:

@@ -1,5 +1,6 @@
 #include <catch/catch.hpp>
 
+#include <signals-cpp/connections.hpp>
 #include <signals-cpp/signal.hpp>
 
 
@@ -71,4 +72,70 @@ CATCH_TEST_CASE(
     a.signalIntValue.emit(42);
     CATCH_CHECK(value1 == 42);
     CATCH_CHECK(value2 == 84);
+}
+
+CATCH_TEST_CASE(
+    "test the connections mediator",
+    "[signals][connections]"
+) {
+    StructWithSignal a;
+    signals::connections conns;
+
+    int value1 = 0, value2 = 0;
+    conns.connect(a.signalIntValue, [&](int v) { value1 = v;     });
+    conns.connect(a.signalIntValue, [&](int v) { value2 = v * 2; });
+
+    a.signalIntValue.emit(42);
+    CATCH_CHECK(value1 == 42);
+    CATCH_CHECK(value2 == 84);
+
+    conns.disconnect_all();
+    a.signalIntValue.emit(21);
+    CATCH_CHECK(value1 == 42); // should be the same as above
+    CATCH_CHECK(value2 == 84); // should be the same as above
+}
+
+CATCH_TEST_CASE(
+    "test to connect to a method",
+    "[signals][connection][method]"
+) {
+    struct Test {
+        Test() : v(0) {
+            conns.connect(sig, this, &Test::onIntValue);
+        }
+
+        void onIntValue(int v_) { v = v_; }
+
+        int v;
+        signals::signal<void(int)> sig;
+        signals::connections conns;
+    };
+
+    Test t;
+
+    t.sig.emit(42);
+
+    CATCH_CHECK(t.v == 42);
+}
+
+CATCH_TEST_CASE(
+    "test to connect to a method with derivation from signals::connections",
+    "[signals][connections][method]"
+) {
+    struct Test : signals::connections {
+        Test() : v(0) {
+            connect(sig, this, &Test::onIntValue);
+        }
+
+        void onIntValue(int v_) { v = v_; }
+
+        int v;
+        signals::signal<void(int)> sig;
+    };
+
+    Test t;
+
+    t.sig.emit(42);
+
+    CATCH_CHECK(t.v == 42);
 }

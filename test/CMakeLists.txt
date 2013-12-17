@@ -11,13 +11,12 @@ add_executable(
 	signals-cpp_unittests
 	main.cpp
 	signals-cpp_unittests.cpp
+	../signals-cpp/connection.hpp
+	../signals-cpp/connections.hpp
+	../signals-cpp/signal.hpp
+	../signals-cpp/signals-cpp.hpp
 )
 	 
-target_link_libraries(
-	signals-cpp_unittests
-	signals-cpp
-)
-
 add_test(
 	NAME signals-cpp_unittests
 	COMMAND signals-cpp_unittests

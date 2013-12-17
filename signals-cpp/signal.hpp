@@ -14,10 +14,10 @@ namespace signals {
     template<typename SIGNATURE>
     struct signal {
 
-        signal()  { }
-        ~signal() { disconnect_all(); }
+        inline signal()  { }
+        inline ~signal() { disconnect_all(); }
 
-        connection connect(std::function<SIGNATURE> target) {
+        inline connection connect(std::function<SIGNATURE> target) {
             assert(target);
 
             // lock the mutex for writing
@@ -43,48 +43,48 @@ namespace signals {
             return conn;
         }
 
-#if defined(SIGNALS_CPP_HAS_VARIADIC_TEMPLATES)
+#if defined(SIGNALS_CPP_HAVE_VARIADIC_TEMPLATES)
 
         template<typename OBJ, typename... ARGS>
-        connection connect(OBJ* obj, void (OBJ::*method)(ARGS... args)) {
+        inline connection connect(OBJ* obj, void (OBJ::*method)(ARGS... args)) {
             assert(obj);
             assert(method);
             return connect([=](ARGS... args) { (obj->*method)(args...); });
         }
 
-#else // defined(SIGNALS_CPP_HAS_VARIADIC_TEMPLATES)
+#else // defined(SIGNALS_CPP_HAVE_VARIADIC_TEMPLATES)
 
         template<typename OBJ>
-        connection connect(OBJ* obj, void (OBJ::*method)()) {
+        inline connection connect(OBJ* obj, void (OBJ::*method)()) {
             assert(obj);
             assert(method);
             return connect([=]() { (obj->*method)(); });
         }
 
         template<typename OBJ, typename ARG1>
-        connection connect(OBJ* obj, void (OBJ::*method)(ARG1 arg1)) {
+        inline connection connect(OBJ* obj, void (OBJ::*method)(ARG1 arg1)) {
             assert(obj);
             assert(method);
             return connect([=](ARG1 arg1) { (obj->*method)(arg1); });
         }
 
         template<typename OBJ, typename ARG1, typename ARG2>
-        connection connect(OBJ* obj, void (OBJ::*method)(ARG1 arg1, ARG2 arg2)) {
+        inline connection connect(OBJ* obj, void (OBJ::*method)(ARG1 arg1, ARG2 arg2)) {
             assert(obj);
             assert(method);
             return connect([=](ARG1 arg1, ARG2 arg2) { (obj->*method)(arg1, arg2); });
         }
 
         template<typename OBJ, typename ARG1, typename ARG2, typename ARG3>
-        connection connect(OBJ* obj, void (OBJ::*method)(ARG1 arg1, ARG2 arg2, ARG3 arg3)) {
+        inline connection connect(OBJ* obj, void (OBJ::*method)(ARG1 arg1, ARG2 arg2, ARG3 arg3)) {
             assert(obj);
             assert(method);
             return connect([=](ARG1 arg1, ARG2 arg2, ARG3 arg3) { (obj->*method)(arg1, arg2, arg3); });
         }
 
-#endif // defined(SIGNALS_CPP_HAS_VARIADIC_TEMPLATES)
+#endif // defined(SIGNALS_CPP_HAVE_VARIADIC_TEMPLATES)
 
-        bool disconnect(connection conn) {
+        inline bool disconnect(connection conn) {
             if(!conn.connected()) { return false; }
 
             // lock the mutex for writing
@@ -106,7 +106,7 @@ namespace signals {
             return false;
         }
 
-        void disconnect_all() {
+        inline void disconnect_all() {
             // lock the mutex for writing
             std::lock_guard<std::mutex> lock(m_write_targets_mutex);
 
@@ -122,7 +122,7 @@ namespace signals {
             }
         }
 
-        bool connected(connection conn) const {
+        inline bool connected(connection conn) const {
             // if the connection is not connected to something it cannot
             // be connected this signal
             if(!conn.connected()) { return false; }
@@ -136,58 +136,56 @@ namespace signals {
             return false;
         }
 
-#if defined(SIGNALS_CPP_HAS_VARIADIC_TEMPLATES)
+#if defined(SIGNALS_CPP_HAVE_VARIADIC_TEMPLATES)
 
         template<typename... ARGS>
-        void emit(ARGS... const& args) const {
+        inline void emit(ARGS... const& args) const {
             if(auto t = m_targets) {
                 for(auto& i : *t) { if(i.conn.connected()) { i.target(args...); } }
             }
         }
 
-#else // defined(SIGNALS_CPP_HAS_VARIADIC_TEMPLATES)
+#else // defined(SIGNALS_CPP_HAVE_VARIADIC_TEMPLATES)
 
-        void emit() const {
+        inline void emit() const {
             if(auto t = m_targets) {
                 for(auto& i : *t) { if(i.conn.connected()) { i.target(); } }
             }
         }
 
         template<typename ARG1>
-        void emit(ARG1 const& arg1) const {
+        inline void emit(ARG1 const& arg1) const {
             if(auto t = m_targets) {
                 for(auto& i : *t) { if(i.conn.connected()) { i.target(arg1); } }
             }
         }
 
         template<typename ARG1, typename ARG2>
-        void emit(ARG1 const& arg1, ARG1 const& arg2) const {
+        inline void emit(ARG1 const& arg1, ARG1 const& arg2) const {
             if(auto t = m_targets) {
                 for(auto& i : *t) { if(i.conn.connected()) { i.target(arg1, arg2); } }
             }
         }
 
         template<typename ARG1, typename ARG2, typename ARG3>
-        void emit(ARG1 const& arg1, ARG1 const& arg2, ARG1 const& arg3) const {
+        inline void emit(ARG1 const& arg1, ARG1 const& arg2, ARG1 const& arg3) const {
             if(auto t = m_targets) {
                 for(auto& i : *t) { if(i.conn.connected()) { i.target(arg1, arg2, arg3); } }
             }
         }
 
-#endif // defined(SIGNALS_CPP_HAS_VARIADIC_TEMPLATES)
+#endif // defined(SIGNALS_CPP_HAVE_VARIADIC_TEMPLATES)
 
 #if defined(SIGNALS_CPP_NEED_EXPLICIT_MOVE)
     public:
-        signal(signal&& o) SIGNALS_CPP_NOEXCEPT :
+        inline signal(signal&& o) SIGNALS_CPP_NOEXCEPT :
             m_write_targets_mutex(std::move(o.m_write_targets_mutex)),
             m_targets(std::move(o.m_targets))
         { }
 
-        signal& operator=(signal&& o) SIGNALS_CPP_NOEXCEPT {
-            if(this != &other) {
-                m_write_targets_mutex = std::move(o.m_write_targets_mutex);
-                m_targets = std::move(o.m_targets);
-            }
+        inline signal& operator=(signal&& o) SIGNALS_CPP_NOEXCEPT {
+            m_write_targets_mutex = std::move(o.m_write_targets_mutex);
+            m_targets = std::move(o.m_targets);
             return *this;
         }
 #endif // defined(SIGNALS_CPP_NEED_EXPLICIT_MOVE)
@@ -198,7 +196,9 @@ namespace signals {
 
     private:
         struct connection_target {
-            connection_target(connection c, std::function<SIGNATURE> t) : conn(std::move(c)), target(std::move(t)) { }
+            inline connection_target(connection c, std::function<SIGNATURE> t) :
+                conn(std::move(c)), target(std::move(t))
+            { }
 
             connection conn;
             std::function<SIGNATURE> target;
@@ -208,7 +208,7 @@ namespace signals {
         std::shared_ptr<std::vector<connection_target>> m_targets;
 
         template<typename CONT>
-        static auto find(connection conn, CONT&& cont) -> decltype(cont.begin()) {
+        static inline auto find(connection conn, CONT&& cont) -> decltype(cont.begin()) {
             return std::find_if(
                 cont.begin(), cont.end(),
                 [&](connection_target const& i) { return (i.conn == conn); }

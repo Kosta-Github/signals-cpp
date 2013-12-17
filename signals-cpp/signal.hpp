@@ -87,9 +87,6 @@ namespace signals {
         inline bool disconnect(connection conn) {
             if(!conn.connected()) { return false; }
 
-            // lock the mutex for writing
-            std::lock_guard<std::mutex> lock(m_write_targets_mutex);
-
             // try to find the matching target
             if(auto t = m_targets) {
                 auto found = find(conn, *t);
@@ -141,7 +138,7 @@ namespace signals {
         template<typename... ARGS>
         inline void emit(ARGS... const& args) const {
             if(auto t = m_targets) {
-                for(auto& i : *t) { if(i.conn.connected()) { i.target(args...); } }
+                for(auto& i : *t) { i.conn.call([&]() { i.target(args...); }); }
             }
         }
 
@@ -149,28 +146,28 @@ namespace signals {
 
         inline void emit() const {
             if(auto t = m_targets) {
-                for(auto& i : *t) { if(i.conn.connected()) { i.target(); } }
+                for(auto& i : *t) { i.conn.call([&]() { i.target(); }); }
             }
         }
 
         template<typename ARG1>
         inline void emit(ARG1 const& arg1) const {
             if(auto t = m_targets) {
-                for(auto& i : *t) { if(i.conn.connected()) { i.target(arg1); } }
+                for(auto& i : *t) { i.conn.call([&]() { i.target(arg1); }); }
             }
         }
 
         template<typename ARG1, typename ARG2>
         inline void emit(ARG1 const& arg1, ARG1 const& arg2) const {
             if(auto t = m_targets) {
-                for(auto& i : *t) { if(i.conn.connected()) { i.target(arg1, arg2); } }
+                for(auto& i : *t) { i.conn.call([&]() { i.target(arg1, arg2); }); }
             }
         }
 
         template<typename ARG1, typename ARG2, typename ARG3>
         inline void emit(ARG1 const& arg1, ARG1 const& arg2, ARG1 const& arg3) const {
             if(auto t = m_targets) {
-                for(auto& i : *t) { if(i.conn.connected()) { i.target(arg1, arg2, arg3); } }
+                for(auto& i : *t) { i.conn.call([&]() { i.target(arg1, arg2, arg3); }); }
             }
         }
 

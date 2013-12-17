@@ -31,7 +31,9 @@ namespace signals {
         inline bool connected() const { return (m_data && m_data->connected); }
 
         /// Disconnects this `connection`. After the `disconnect` call the corresponding
-        /// callback target will not be triggered anymore.
+        /// target callback will not be triggered anymore. If there are currently some
+        /// active calls running via this `connection` the `disconnect` call blocks until
+        /// all calls have finished.
         inline void disconnect() {
             if(!m_data) { return; }
 
@@ -46,8 +48,6 @@ namespace signals {
         // only for internal use
         template<typename CB>
         inline void call(CB&& cb) {
-            assert(cb);
-
             if(!m_data || !m_data->connected) { return; }
 
             ++m_data->running;

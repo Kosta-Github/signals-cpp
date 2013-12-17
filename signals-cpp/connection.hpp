@@ -4,6 +4,7 @@
 
 #include <atomic>
 #include <memory>
+#include <thread>
 
 namespace signals {
 
@@ -12,25 +13,55 @@ namespace signals {
     /// It can be checked if the connection is still connected and it could be
     /// disconnected.
     struct connection {
-        inline connection(std::shared_ptr<std::atomic<bool>> c = nullptr) : m_connected(std::move(c)) { }
+        struct data {
+            inline data() : connected(true), running(0) { }
 
-        inline bool operator==(connection const& o) const { return (m_connected == o.m_connected); }
-        inline bool operator!=(connection const& o) const { return (m_connected != o.m_connected); }
+            std::atomic<bool> connected;    // connection still active?
+            std::atomic<int>  running;      // number of currently active calls routed through this connection
+        };
+
+    public:
+        inline connection() { }
+        inline connection(std::shared_ptr<data> d) : m_data(std::move(d)) { }
+
+        inline bool operator==(connection const& o) const { return (m_data == o.m_data); }
+        inline bool operator!=(connection const& o) const { return (m_data != o.m_data); }
 
         /// Checks if the `connection` represented by this object is (still) connected.
-        inline bool connected() const { return (m_connected && *m_connected); }
+        inline bool connected() const { return (m_data && m_data->connected); }
 
         /// Disconnects this `connection`. After the `disconnect` call the corresponding
         /// callback target will not be triggered anymore.
-        inline void disconnect() { if(m_connected) { *m_connected = false; } }
+        inline void disconnect() {
+            if(!m_data) { return; }
+
+            // first signal that no new call should be routed through this connection
+            m_data->connected = false;
+
+            // wait until all currently running calls have finished
+            while(m_data->running > 0) { std::this_thread::yield(); } // busy loop
+        }
+
+    public:
+        // only for internal use
+        template<typename CB>
+        inline void call(CB&& cb) {
+            assert(cb);
+
+            if(!m_data || !m_data->connected) { return; }
+
+            ++m_data->running;
+            if(m_data->connected) { cb(); }
+            --m_data->running;
+        }
+
+        // only for internal use
+        inline static connection make_connection() {
+            return connection(std::make_shared<data>());
+        }
 
     private:
-        // The `shared_ptr` is used to define the connection identity
-        // used by the operator== and for searching in stored connection lists.
-        // The `atomic bool` is used for signaling that the connection should
-        // be considered as disconnected (value equal to `false`) in a
-        // thread-safe manner.
-        std::shared_ptr<std::atomic<bool>> m_connected;
+        std::shared_ptr<data> m_data;
     };
 
 } // namespace signals

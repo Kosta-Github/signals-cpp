@@ -34,7 +34,7 @@ namespace signals {
             }
 
             // add the new target to the new vector
-            auto conn = connection(std::make_shared<std::atomic<bool>>(true));
+            auto conn = connection::make_connection();
             new_targets->emplace_back(conn, std::move(target));
 
             // replace the pointer to the targets (in a thread safe manner)
@@ -208,7 +208,7 @@ namespace signals {
         std::shared_ptr<std::vector<connection_target>> m_targets;
 
         template<typename CONT>
-        static inline auto find(connection conn, CONT&& cont) -> decltype(cont.begin()) {
+        inline static auto find(connection conn, CONT&& cont) -> decltype(cont.begin()) {
             return std::find_if(
                 cont.begin(), cont.end(),
                 [&](connection_target const& i) { return (i.conn == conn); }

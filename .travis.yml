@@ -26,7 +26,9 @@ before_install:
   - if [ "$CXX" = "clang++" ]; then sudo apt-get install -qq clang-3.4; fi
 
 install:
+  - echo CXX=$CXX
   - $CXX --version
+  - clang-3.4 --version
   - cmake -H. -BBuild -DCMAKE_BUILD_TYPE=$BUILD_CONFIG
 
 script:

@@ -4,8 +4,8 @@
 namespace signals {
     namespace test {
 
-        struct milestone {
-            milestone() : value(0) { }
+        struct stepper {
+            stepper() : value(0) { }
 
             void reached(int v) {
                 execute_at(v, []() { });

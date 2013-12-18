@@ -3,7 +3,7 @@
 #include <signals-cpp/connections.hpp>
 #include <signals-cpp/signal.hpp>
 
-#include "milestone.hpp"
+#include "stepper.hpp"
 
 CATCH_TEST_CASE(
     "test a single simple connection",
@@ -165,7 +165,7 @@ CATCH_TEST_CASE(
     signals::signal<void()> sig;
     signals::connection conn;
 
-    signals::test::milestone step;
+    signals::test::stepper step;
 
     conn = sig.connect([&]() {
         step.execute_at(2, [&]() { conn.disconnect(false); });
@@ -222,7 +222,7 @@ CATCH_TEST_CASE(
     signals::connection conn1, conn2;
     int value = 0;
 
-    signals::test::milestone step;
+    signals::test::stepper step;
 
     conn1 = sig.connect([&]() {
         step.execute_at(2, [&]() { conn1.disconnect(); });

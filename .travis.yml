@@ -4,7 +4,7 @@ language: cpp
 
 compiler:
   - gcc
-  - clang
+#  - clang
 
 env:
   - BUILD_CONFIG=Debug
@@ -28,7 +28,6 @@ before_install:
 install:
   - echo CXX=$CXX
   - $CXX --version
-  - clang-3.4 --version
   - cmake -H. -BBuild -DCMAKE_BUILD_TYPE=$BUILD_CONFIG
 
 script:

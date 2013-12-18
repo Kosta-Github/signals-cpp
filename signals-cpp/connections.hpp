@@ -18,7 +18,7 @@ namespace signals {
     /// valid to finish potential callback running in parallel on other threads. The 
     struct connections {
         inline connections()  { }
-        inline ~connections() { disconnect_all(); }
+        inline ~connections() { disconnect_all(true); }
 
 #if defined(SIGNALS_CPP_HAVE_VARIADIC_TEMPLATES)
 
@@ -72,8 +72,9 @@ namespace signals {
         }
 
         /// Disconnects all tracked `connections`.
-        inline void disconnect_all() {
-            for(auto&& i : m_conns) { i.disconnect(); }
+        inline void disconnect_all(bool wait = false) {
+            for(auto&& i : m_conns) { i.disconnect(false); } // first disconnect all connections without waiting
+            if(wait) { for(auto&& i : m_conns) { i.disconnect(true); } } // then wait for them (if requested)
             m_conns.clear();
         }
 

@@ -34,14 +34,14 @@ namespace signals {
         /// target callback will not be triggered anymore. If there are currently some
         /// active calls running via this `connection` the `disconnect` call blocks until
         /// all calls have finished.
-        inline void disconnect() {
+        inline void disconnect(bool wait = false) {
             if(!m_data) { return; }
 
-            // first signal that no new call should be routed through this connection
             m_data->connected = false;
 
-            // wait until all currently running calls have finished
-            while(m_data->running > 0) { std::this_thread::yield(); } // busy loop
+            while(wait && (m_data->running > 0)) {
+                std::this_thread::yield();
+            }
         }
 
     public:

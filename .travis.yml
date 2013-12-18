@@ -4,7 +4,7 @@ language: cpp
 
 compiler:
   - gcc
-#  - clang
+  - clang
 
 env:
   - BUILD_CONFIG=Debug

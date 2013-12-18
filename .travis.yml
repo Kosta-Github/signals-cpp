@@ -17,12 +17,11 @@ before_install:
   # update the apt repository
   - sudo add-apt-repository ppa:ubuntu-toolchain-r/test -y
   - sudo apt-get update -qq
-  - if [ "$CXX" = "g++" ]; then sudo apt-get install -qq g++-4.8; fi
-  - if [ "$CXX" = "g++" ]; then export CXX="g++-4.8" CC="gcc-4.8"; fi
+  - if [ "$CXX" = "g++"     ]; then sudo apt-get install -qq g++-4.8; fi
+  - if [ "$CXX" = "g++"     ]; then export CXX="g++-4.8" CC="gcc-4.8"; fi
   - if [ "$CXX" = "clang++" ]; then sudo apt-get install -qq clang-3.4; fi
 
 install:
-  - "$CXX" --version
   - cmake -H. -BBuild -DCMAKE_BUILD_TYPE=$BUILD_CONFIG
 
 script:

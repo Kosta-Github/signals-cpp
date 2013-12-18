@@ -19,6 +19,7 @@ namespace signals {
             template<typename FUNC>
             void execute_at(int v, FUNC&& func) {
                 while(value < v) { std::this_thread::yield(); }
+                assert(value == v);
                 func();
                 assert(value == v);
                 value = v + 1;

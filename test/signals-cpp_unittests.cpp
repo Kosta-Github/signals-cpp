@@ -7,7 +7,7 @@
 
 CATCH_TEST_CASE(
     "test a single simple connection",
-    "[signals][connection][connect]"
+    "[signals][signals_01][single-threaded]"
 ) {
     signals::signal<void(int v)> sig;
 
@@ -20,7 +20,7 @@ CATCH_TEST_CASE(
 
 CATCH_TEST_CASE(
     "test to disconnect a single simple connection",
-    "[signals][connection][disconnection]"
+    "[signals][signals_02][single-threaded]"
 ) {
     signals::signal<void(int v)> sig;
 
@@ -38,7 +38,7 @@ CATCH_TEST_CASE(
 
 CATCH_TEST_CASE(
     "test to check the existance of a connection",
-    "[signals][connection][exists]"
+    "[signals][signals_03][single-threaded]"
 ) {
     signals::signal<void(int v)> sig;
 
@@ -54,7 +54,7 @@ CATCH_TEST_CASE(
 
 CATCH_TEST_CASE(
     "test multiple simple connections",
-    "[signals][connection]"
+    "[signals][signals_04][single-threaded]"
 ) {
     signals::signal<void(int v)> sig;
 
@@ -69,7 +69,7 @@ CATCH_TEST_CASE(
 
 CATCH_TEST_CASE(
     "test the connections mediator",
-    "[signals][connections]"
+    "[signals][signals_05][single-threaded]"
 ) {
     signals::signal<void(int v)> sig;
     signals::connections conns;
@@ -90,7 +90,7 @@ CATCH_TEST_CASE(
 
 CATCH_TEST_CASE(
     "test to connect to a method",
-    "[signals][connection][method]"
+    "[signals][signals_06][single-threaded]"
 ) {
     struct Test {
         Test() : v(0) {
@@ -119,7 +119,7 @@ CATCH_TEST_CASE(
 
 CATCH_TEST_CASE(
     "test to connect to a method with inheriting from signals::connections",
-    "[signals][connections][method]"
+    "[signals][signals_07][single-threaded]"
 ) {
     struct Test : signals::connections {
         Test() : v(0) {
@@ -147,7 +147,7 @@ CATCH_TEST_CASE(
 
 CATCH_TEST_CASE(
     "test to disconnect a connection from within the callback triggered by that connection",
-    "[signals][connection][disconnect]"
+    "[signals][signals_08][single-threaded]"
 ) {
     signals::signal<void()> sig;
     signals::connection conn;
@@ -160,7 +160,7 @@ CATCH_TEST_CASE(
 
 CATCH_TEST_CASE(
     "test to disconnect a connection from within the callback triggered by that connection on another thread",
-    "[signals][connection][disconnect][threads]"
+    "[signals][signals_09][multi-threaded]"
 ) {
     signals::signal<void()> sig;
     signals::connection conn;
@@ -183,4 +183,90 @@ CATCH_TEST_CASE(
     step.reached(6);
 
     t.join();
+}
+
+CATCH_TEST_CASE(
+    "test to connect a new connection from within the callback triggered by a signal",
+    "[signals][signals_10][single-threaded]"
+) {
+    signals::signal<void()> sig;
+    signals::connection conn1, conn2;
+    int value = 0;
+
+    conn1 = sig.connect([&]() {
+        conn1.disconnect();
+        conn2 = sig.connect([&]() { value = 42; });
+    });
+
+    CATCH_CHECK(conn1.connected());
+    CATCH_CHECK_FALSE(conn2.connected());
+    CATCH_CHECK(value == 0);
+
+    sig.emit();
+    CATCH_CHECK_FALSE(conn1.connected());
+    CATCH_CHECK(conn2.connected());
+    CATCH_CHECK(value == 0);
+
+    sig.emit();
+    CATCH_CHECK_FALSE(conn1.connected());
+    CATCH_CHECK(conn2.connected());
+    CATCH_CHECK(value ==42);
+}
+
+CATCH_TEST_CASE(
+    "test to connect a new connection from within the callback triggered by a signal and immediately trigger "
+    "this new connection from another thread without the need to finish the first trigger before that",
+    "[signals][signals_11][multi-threaded]"
+) {
+    signals::signal<void()> sig;
+    signals::connection conn1, conn2;
+    int value = 0;
+
+    signals::test::milestone step;
+
+    conn1 = sig.connect([&]() {
+        step.execute_at(2, [&]() { conn1.disconnect(); });
+        step.execute_at(4, [&]() { conn2 = sig.connect([&]() { value = 42; }); });
+        step.reached(9);
+    });
+    auto t1 = std::thread([&]() {
+        step.reached(1);
+        sig.emit();
+        step.reached(10);
+    });
+
+    auto t2 = std::thread([&]() {
+        step.reached(6);
+        sig.emit();
+        step.reached(7);
+    });
+
+    step.execute_at(0, [&]() {
+        CATCH_CHECK(conn1.connected());
+        CATCH_CHECK_FALSE(conn2.connected());
+        CATCH_CHECK(value == 0);
+    });
+
+    step.execute_at(3, [&]() {
+        CATCH_CHECK_FALSE(conn1.connected());
+        CATCH_CHECK_FALSE(conn2.connected());
+        CATCH_CHECK(value == 0);
+    });
+
+    step.execute_at(5, [&]() {
+        CATCH_CHECK_FALSE(conn1.connected());
+        CATCH_CHECK(conn2.connected());
+        CATCH_CHECK(value == 0);
+    });
+
+    step.execute_at(8, [&]() {
+        CATCH_CHECK_FALSE(conn1.connected());
+        CATCH_CHECK(conn2.connected());
+        CATCH_CHECK(value == 42);
+    });
+
+    step.reached(11);
+
+    t1.join();
+    t2.join();
 }

@@ -35,7 +35,7 @@
 
 #if defined(__clang__)
 #  define SIGNALS_CPP_HAVE_VARIADIC_TEMPLATES
-#elif !defined(_MSC_VER) || (_MSC_VER >= 1800)
+#elif defined(_MSC_VER) && (_MSC_VER >= 1800)
 #  define SIGNALS_CPP_HAVE_VARIADIC_TEMPLATES
 #endif
 

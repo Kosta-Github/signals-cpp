@@ -159,7 +159,7 @@ namespace signals {
 #if defined(SIGNALS_CPP_HAVE_VARIADIC_TEMPLATES)
 
         template<typename... ARGS>
-        inline void emit(ARGS... const& args) const {
+        inline void emit(ARGS const&... args) const {
             if(auto t = m_targets) {
                 for(auto& i : *t) { i.conn.call([&]() { i.target(args...); }); }
             }

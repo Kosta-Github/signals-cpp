@@ -25,6 +25,8 @@
 
 #include "signal.hpp"
 
+#include <utility>
+
 namespace signals {
 
     /// The `connections` class helps in tracking and disconnecting a group of connections.
@@ -48,8 +50,8 @@ namespace signals {
         /// Connects to the given `signal` `s` and adds the created `connection` to
         /// the list of tracked connections.
         template<typename SIGNAL, typename... ARGS>
-        inline connection connect(SIGNAL& s, ARGS...&& args) {
-            auto conn = s.connect(std::forward<ARGS...>(args...));
+        inline connection connect(SIGNAL& s, ARGS&&... args) {
+            auto conn = s.connect(std::forward<ARGS>(args)...);
             add(conn);
             return conn;
         }

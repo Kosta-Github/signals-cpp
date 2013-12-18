@@ -169,7 +169,7 @@ CATCH_TEST_CASE(
 
     conn = sig.connect([&]() {
         step.execute_at(2, [&]() { conn.disconnect(false); });
-        step.delay(4, 10);
+        step.delay(4, std::chrono::milliseconds(10));
     });
     auto t = std::thread([&]() {
         step.reached(1);

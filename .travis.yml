@@ -16,6 +16,8 @@ before_install:
 
   # update the apt repository
   - sudo add-apt-repository -y ppa:ubuntu-toolchain-r/test
+  - sudo add-apt-repository -y "deb http://archive.ubuntu.com/ubuntu/ saucy main universe"
+  - sudo add-apt-repository -y "deb http://archive.ubuntu.com/ubuntu/ raring main universe"
   - sudo add-apt-repository -y "deb http://llvm.org/apt/raring/ llvm-toolchain-raring main"
   - wget -O - http://llvm.org/apt/llvm-snapshot.gpg.key | sudo apt-key add -
   - sudo apt-get update -qq

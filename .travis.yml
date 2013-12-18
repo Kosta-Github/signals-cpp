@@ -1,0 +1,33 @@
+# This is the config file for building signals-cpp and running its autotest suite with Travis-ci.org
+
+language: cpp
+
+compiler:
+  - gcc
+  - clang
+
+env:
+  - BUILD_CONFIG=Debug
+  - BUILD_CONFIG=Release
+
+before_install:
+  # update fit submodules (if required)
+  - git submodule update --init --recursive
+
+  # update the apt repository
+  - sudo add-apt-repository -y "deb http://archive.ubuntu.com/ubuntu/ quantal main universe"
+  - sudo apt-get -qq update
+
+  # update gcc to 4.7 (travis defaults to 4.6.x)
+  - sudo apt-get -qq install g++-4.7
+  - sudo update-alternatives --quiet --install /usr/bin/gcc gcc /usr/bin/gcc-4.6 60 --slave /usr/bin/g++ g++ /usr/bin/g++-4.6 --slave /usr/bin/gcov gcov /usr/bin/gcov-4.6
+  - sudo update-alternatives --quiet --install /usr/bin/gcc gcc /usr/bin/gcc-4.7 40 --slave /usr/bin/g++ g++ /usr/bin/g++-4.7 --slave /usr/bin/gcov gcov /usr/bin/gcov-4.7
+  - sudo update-alternatives --quiet --set gcc /usr/bin/gcc-4.7
+
+install:
+  - cmake -H. -BBuild -DCMAKE_BUILD_TYPE=$BUILD_CONFIG
+
+script:
+  - cd Build
+  - make -k && ctest -V --timeout 60
+  - cd ..

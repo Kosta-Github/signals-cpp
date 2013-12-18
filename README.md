@@ -1,4 +1,4 @@
-signals-cpp
+signals-cpp [![Build Status](https://travis-ci.org/Kosta-Github/signals-cpp.png)](https://travis-ci.org/Kosta-Github/signals-cpp)
 ===========
 Provide a very simple header-only C++ interface for creating and managing signal-slot-connections in an easy and thread-safe manner.
 

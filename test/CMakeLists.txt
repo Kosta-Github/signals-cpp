@@ -10,6 +10,7 @@ add_definitions(-DCATCH_CONFIG_PREFIX_ALL)
 add_executable(
 	signals-cpp_unittests
 	main.cpp
+	milestone.hpp
 	signals-cpp_unittests.cpp
 	../signals-cpp/connection.hpp
 	../signals-cpp/connections.hpp

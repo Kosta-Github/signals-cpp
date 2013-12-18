@@ -15,13 +15,10 @@ before_install:
   - git submodule update --init --recursive
 
   # update the apt repository
-  - sudo add-apt-repository -y "deb http://archive.ubuntu.com/ubuntu/ quantal main universe"
-  - sudo apt-get -qq update
-
-  # update gcc to 4.7 (travis defaults to 4.6.x)
-  - sudo apt-get -qq install g++-4.7
-  - sudo update-alternatives --quiet --install /usr/bin/gcc gcc /usr/bin/gcc-4.7 40 --slave /usr/bin/g++ g++ /usr/bin/g++-4.7 --slave /usr/bin/gcov gcov /usr/bin/gcov-4.7
-  - sudo update-alternatives --quiet --set gcc /usr/bin/gcc-4.7
+  - sudo add-apt-repository ppa:ubuntu-toolchain-r/test -y
+  - sudo apt-get update -qq
+  - if [ "$CXX" = "g++" ]; then sudo apt-get install -qq g++-4.8; fi
+  - if [ "$CXX" = "g++" ]; then export CXX="g++-4.8" CC="gcc-4.8"; fi
 
 install:
   - cmake -H. -BBuild -DCMAKE_BUILD_TYPE=$BUILD_CONFIG

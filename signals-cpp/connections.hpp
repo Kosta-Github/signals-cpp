@@ -86,6 +86,20 @@ namespace signals {
             return conn;
         }
 
+        template<typename SIGNAL, typename ARG1, typename ARG2, typename ARG3, typename ARG4, typename ARG5>
+        inline connection connect(SIGNAL& s, ARG1&& arg1, ARG2&& arg2, ARG3&& arg3, ARG4&& arg4, ARG5&& arg5) {
+            auto conn = s.connect(std::forward<ARG1>(arg1), std::forward<ARG2>(arg2), std::forward<ARG3>(arg3), std::forward<ARG4>(arg4), std::forward<ARG5>(arg5));
+            add(conn);
+            return conn;
+        }
+
+        template<typename SIGNAL, typename ARG1, typename ARG2, typename ARG3, typename ARG4, typename ARG5, typename ARG6>
+        inline connection connect(SIGNAL& s, ARG1&& arg1, ARG2&& arg2, ARG3&& arg3, ARG4&& arg4, ARG5&& arg5, ARG6&& arg6) {
+            auto conn = s.connect(std::forward<ARG1>(arg1), std::forward<ARG2>(arg2), std::forward<ARG3>(arg3), std::forward<ARG4>(arg4), std::forward<ARG5>(arg5), std::forward<ARG6>(arg6));
+            add(conn);
+            return conn;
+        }
+
 #endif //  defined(SIGNALS_CPP_HAVE_VARIADIC_TEMPLATES)
 
         /// If the given `connection` `conn` is connected it gets added to the list of
@@ -97,9 +111,9 @@ namespace signals {
         }
 
         /// Disconnects all tracked `connections`.
-        inline void disconnect_all(bool wait = false) {
+        inline void disconnect_all(bool wait_if_running = false) {
             for(auto&& i : m_conns) { i.disconnect(false); } // first disconnect all connections without waiting
-            if(wait) { for(auto&& i : m_conns) { i.disconnect(true); } } // then wait for them (if requested)
+            if(wait_if_running) { for(auto&& i : m_conns) { i.disconnect(true); } } // then wait for them (if requested)
             m_conns.clear();
         }
 

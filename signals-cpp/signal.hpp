@@ -38,17 +38,25 @@ namespace signals {
     struct signal {
 
         inline signal()  { }
-        inline ~signal() { disconnect_all(); }
+        inline ~signal() { disconnect_all(true); }
 
         inline connection connect(std::function<SIGNATURE> target) {
             assert(target);
 
+            // create the new conection handle
+            auto conn = connection::make_connection();
+
+            // create a new targets vector (will be filled in with
+            // the existing and still active targets within the lock below)
+            auto new_targets = std::make_shared<std::vector<connection_target>>();
+
             // lock the mutex for writing
             std::lock_guard<std::mutex> lock(m_write_targets_mutex);
-            auto new_targets = std::make_shared<std::vector<connection_target>>();
 
             // copy existing and still active targets
             if(auto t = m_targets) {
+                new_targets->reserve(t->size() + 1);
+
                 std::copy_if(
                     t->begin(), t->end(),
                     std::back_inserter(*new_targets),
@@ -56,8 +64,7 @@ namespace signals {
                 );
             }
 
-            // add the new target to the new vector
-            auto conn = connection::make_connection();
+            // add the new connection to the new vector
             new_targets->emplace_back(conn, std::move(target));
 
             // replace the pointer to the targets (in a thread safe manner)
@@ -105,19 +112,30 @@ namespace signals {
             return connect([=](ARG1 arg1, ARG2 arg2, ARG3 arg3) { (obj->*method)(arg1, arg2, arg3); });
         }
 
+        template<typename OBJ, typename ARG1, typename ARG2, typename ARG3, typename ARG4>
+        inline connection connect(OBJ* obj, void (OBJ::*method)(ARG1 arg1, ARG2 arg2, ARG3 arg3, ARG4 arg4)) {
+            assert(obj);
+            assert(method);
+            return connect([=](ARG1 arg1, ARG2 arg2, ARG3 arg3, ARG4 arg4) { (obj->*method)(arg1, arg2, arg3, arg4); });
+        }
+
+        template<typename OBJ, typename ARG1, typename ARG2, typename ARG3, typename ARG4, typename ARG5>
+        inline connection connect(OBJ* obj, void (OBJ::*method)(ARG1 arg1, ARG2 arg2, ARG3 arg3, ARG4 arg4, ARG5 arg5)) {
+            assert(obj);
+            assert(method);
+            return connect([=](ARG1 arg1, ARG2 arg2, ARG3 arg3, ARG4 arg4, ARG5 arg5) { (obj->*method)(arg1, arg2, arg3, arg4, arg5); });
+        }
+
 #endif // defined(SIGNALS_CPP_HAVE_VARIADIC_TEMPLATES)
 
-        inline bool disconnect(connection conn) {
+        inline bool disconnect(connection conn, bool wait_if_running = false) {
             if(!conn.connected()) { return false; }
 
             // try to find the matching target
             if(auto t = m_targets) {
-                auto found = find(conn, *t);
-                if(found != t->end()) {
-
+                if(find(conn, *t) != t->end()) {
                     // disconnect the connection but keep it in the targets list
-                    conn.disconnect();
-
+                    conn.disconnect(wait_if_running);
                     return true;
                 }
             }
@@ -126,19 +144,20 @@ namespace signals {
             return false;
         }
 
-        inline void disconnect_all() {
-            // lock the mutex for writing
-            std::lock_guard<std::mutex> lock(m_write_targets_mutex);
+        inline void disconnect_all(bool wait_if_running) {
+            auto t = decltype(m_targets)(nullptr);
 
-            // disconnect all targets
-            if(auto t = m_targets) {
-                // clean out the targets pointer so no other thread
+            {   // clean out the targets pointer so no other thread
                 // will emit this signal anymore (running emit calls
                 // might still reference the targets)
-                m_targets = nullptr;
+                std::lock_guard<std::mutex> lock(m_write_targets_mutex);
+                std::swap(m_targets, t); // replace m_targets pointer with a nullptr
+            }
 
-                // and mark all connected connections as being disconnected
-                for(auto&& i : *t) { i.conn.disconnect(); }
+            // disconnect all targets
+            if(t) {
+                for(auto&& i : *t) { i.conn.disconnect(false); }
+                if(wait_if_running) { for(auto&& i : *t) { i.conn.disconnect(true); } }
             }
         }
 
@@ -181,16 +200,30 @@ namespace signals {
         }
 
         template<typename ARG1, typename ARG2>
-        inline void emit(ARG1 const& arg1, ARG1 const& arg2) const {
+        inline void emit(ARG1 const& arg1, ARG2 const& arg2) const {
             if(auto t = m_targets) {
                 for(auto& i : *t) { i.conn.call([&]() { i.target(arg1, arg2); }); }
             }
         }
 
         template<typename ARG1, typename ARG2, typename ARG3>
-        inline void emit(ARG1 const& arg1, ARG1 const& arg2, ARG1 const& arg3) const {
+        inline void emit(ARG1 const& arg1, ARG2 const& arg2, ARG3 const& arg3) const {
             if(auto t = m_targets) {
                 for(auto& i : *t) { i.conn.call([&]() { i.target(arg1, arg2, arg3); }); }
+            }
+        }
+
+        template<typename ARG1, typename ARG2, typename ARG3, typename ARG4>
+        inline void emit(ARG1 const& arg1, ARG2 const& arg2, ARG3 const& arg3, ARG4 const& arg4) const {
+            if(auto t = m_targets) {
+                for(auto& i : *t) { i.conn.call([&]() { i.target(arg1, arg2, arg3, arg4); }); }
+            }
+        }
+
+        template<typename ARG1, typename ARG2, typename ARG3, typename ARG4, typename ARG5>
+        inline void emit(ARG1 const& arg1, ARG2 const& arg2, ARG3 const& arg3, ARG4 const& arg4, ARG5 const& arg5) const {
+            if(auto t = m_targets) {
+                for(auto& i : *t) { i.conn.call([&]() { i.target(arg1, arg2, arg3, arg4, arg5); }); }
             }
         }
 

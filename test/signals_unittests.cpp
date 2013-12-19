@@ -24,7 +24,6 @@
 #include <catch/catch.hpp>
 
 #include <signals-cpp/connections.hpp>
-#include <signals-cpp/signal.hpp>
 
 #include "stepper.hpp"
 
@@ -37,7 +36,7 @@ CATCH_TEST_CASE(
     int value = 0;
     sig.connect([&](int v) { value = v; });
 
-    sig.emit(42);
+    sig.fire(42);
     CATCH_CHECK(value == 42);
 }
 
@@ -50,12 +49,12 @@ CATCH_TEST_CASE(
     int value = 0;
     auto conn = sig.connect([&](int v) { value = v; });
 
-    sig.emit(42);
+    sig.fire(42);
     CATCH_CHECK(value == 42);
 
     CATCH_CHECK(sig.disconnect(conn));
     CATCH_CHECK_FALSE(sig.disconnect(conn)); // cannot be removed a second time
-    sig.emit(84);
+    sig.fire(84);
     CATCH_CHECK(value == 42); // still needs to be 42, since we disconnected
 }
 
@@ -85,7 +84,7 @@ CATCH_TEST_CASE(
     sig.connect([&](int v) { value1 = v;     });
     sig.connect([&](int v) { value2 = v * 2; });
 
-    sig.emit(42);
+    sig.fire(42);
     CATCH_CHECK(value1 == 42);
     CATCH_CHECK(value2 == 84);
 }
@@ -101,12 +100,12 @@ CATCH_TEST_CASE(
     conns.connect(sig, [&](int v) { value1 = v;     });
     conns.connect(sig, [&](int v) { value2 = v * 2; });
 
-    sig.emit(42);
+    sig.fire(42);
     CATCH_CHECK(value1 == 42);
     CATCH_CHECK(value2 == 84);
 
     conns.disconnect_all();
-    sig.emit(21);
+    sig.fire(21);
     CATCH_CHECK(value1 == 42); // should be the same as above
     CATCH_CHECK(value2 == 84); // should be the same as above
 }
@@ -133,10 +132,10 @@ CATCH_TEST_CASE(
     Test t;
     CATCH_CHECK(t.v == 0);
 
-    t.sigVoid.emit();
+    t.sigVoid.fire();
     CATCH_CHECK(t.v == 1510);
 
-    t.sigInt.emit(42);
+    t.sigInt.fire(42);
     CATCH_CHECK(t.v == 42);
 }
 
@@ -161,10 +160,10 @@ CATCH_TEST_CASE(
     Test t;
     CATCH_CHECK(t.v == 0);
 
-    t.sigVoid.emit();
+    t.sigVoid.fire();
     CATCH_CHECK(t.v == 1510);
 
-    t.sigInt.emit(42);
+    t.sigInt.fire(42);
     CATCH_CHECK(t.v == 42);
 }
 
@@ -177,7 +176,7 @@ CATCH_TEST_CASE(
 
     conn = sig.connect([&]() { conn.disconnect(false); });
     CATCH_CHECK(conn.connected());
-    sig.emit();
+    sig.fire();
     CATCH_CHECK_FALSE(conn.connected());
 }
 
@@ -196,7 +195,7 @@ CATCH_TEST_CASE(
     });
     auto t = std::thread([&]() {
         step.reached(1);
-        sig.emit();
+        sig.fire();
         step.reached(5);
     });
 
@@ -225,12 +224,12 @@ CATCH_TEST_CASE(
     CATCH_CHECK_FALSE(conn2.connected());
     CATCH_CHECK(value == 0);
 
-    sig.emit();
+    sig.fire();
     CATCH_CHECK_FALSE(conn1.connected());
     CATCH_CHECK(conn2.connected());
     CATCH_CHECK(value == 0);
 
-    sig.emit();
+    sig.fire();
     CATCH_CHECK_FALSE(conn1.connected());
     CATCH_CHECK(conn2.connected());
     CATCH_CHECK(value ==42);
@@ -254,13 +253,13 @@ CATCH_TEST_CASE(
     });
     auto t1 = std::thread([&]() {
         step.reached(1);
-        sig.emit();
+        sig.fire();
         step.reached(10);
     });
 
     auto t2 = std::thread([&]() {
         step.reached(6);
-        sig.emit();
+        sig.fire();
         step.reached(7);
     });
 

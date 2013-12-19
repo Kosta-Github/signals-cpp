@@ -42,3 +42,4 @@
 #include "connections.hpp"
 
 namespace signals { }
+namespace sigs = signals;

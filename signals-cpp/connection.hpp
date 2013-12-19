@@ -23,7 +23,7 @@
 
 #pragma once
 
-#include "signals-cpp.hpp"
+#include "config.hpp"
 
 #include <atomic>
 #include <memory>

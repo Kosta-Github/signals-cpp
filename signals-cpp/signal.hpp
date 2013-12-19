@@ -148,8 +148,8 @@ namespace signals {
             auto t = decltype(m_targets)(nullptr);
 
             {   // clean out the targets pointer so no other thread
-                // will emit this signal anymore (running emit calls
-                // might still reference the targets)
+                // will fire this signal anymore (already running fired
+                // calls might still reference the targets)
                 std::lock_guard<std::mutex> lock(m_write_targets_mutex);
                 std::swap(m_targets, t); // replace m_targets pointer with a nullptr
             }
@@ -178,7 +178,7 @@ namespace signals {
 #if defined(SIGNALS_CPP_HAVE_VARIADIC_TEMPLATES)
 
         template<typename... ARGS>
-        inline void emit(ARGS const&... args) const {
+        inline void fire(ARGS const&... args) const {
             if(auto t = m_targets) {
                 for(auto& i : *t) { i.conn.call([&]() { i.target(args...); }); }
             }
@@ -186,42 +186,42 @@ namespace signals {
 
 #else // defined(SIGNALS_CPP_HAVE_VARIADIC_TEMPLATES)
 
-        inline void emit() const {
+        inline void fire() const {
             if(auto t = m_targets) {
                 for(auto& i : *t) { i.conn.call([&]() { i.target(); }); }
             }
         }
 
         template<typename ARG1>
-        inline void emit(ARG1 const& arg1) const {
+        inline void fire(ARG1 const& arg1) const {
             if(auto t = m_targets) {
                 for(auto& i : *t) { i.conn.call([&]() { i.target(arg1); }); }
             }
         }
 
         template<typename ARG1, typename ARG2>
-        inline void emit(ARG1 const& arg1, ARG2 const& arg2) const {
+        inline void fire(ARG1 const& arg1, ARG2 const& arg2) const {
             if(auto t = m_targets) {
                 for(auto& i : *t) { i.conn.call([&]() { i.target(arg1, arg2); }); }
             }
         }
 
         template<typename ARG1, typename ARG2, typename ARG3>
-        inline void emit(ARG1 const& arg1, ARG2 const& arg2, ARG3 const& arg3) const {
+        inline void fire(ARG1 const& arg1, ARG2 const& arg2, ARG3 const& arg3) const {
             if(auto t = m_targets) {
                 for(auto& i : *t) { i.conn.call([&]() { i.target(arg1, arg2, arg3); }); }
             }
         }
 
         template<typename ARG1, typename ARG2, typename ARG3, typename ARG4>
-        inline void emit(ARG1 const& arg1, ARG2 const& arg2, ARG3 const& arg3, ARG4 const& arg4) const {
+        inline void fire(ARG1 const& arg1, ARG2 const& arg2, ARG3 const& arg3, ARG4 const& arg4) const {
             if(auto t = m_targets) {
                 for(auto& i : *t) { i.conn.call([&]() { i.target(arg1, arg2, arg3, arg4); }); }
             }
         }
 
         template<typename ARG1, typename ARG2, typename ARG3, typename ARG4, typename ARG5>
-        inline void emit(ARG1 const& arg1, ARG2 const& arg2, ARG3 const& arg3, ARG4 const& arg4, ARG5 const& arg5) const {
+        inline void fire(ARG1 const& arg1, ARG2 const& arg2, ARG3 const& arg3, ARG4 const& arg4, ARG5 const& arg5) const {
             if(auto t = m_targets) {
                 for(auto& i : *t) { i.conn.call([&]() { i.target(arg1, arg2, arg3, arg4, arg5); }); }
             }

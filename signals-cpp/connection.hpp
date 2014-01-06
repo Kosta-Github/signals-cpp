@@ -47,9 +47,6 @@ namespace signals {
         inline connection() { }
         inline connection(std::shared_ptr<data> d) : m_data(std::move(d)) { }
 
-        inline bool operator==(connection const& o) const { return (m_data == o.m_data); }
-        inline bool operator!=(connection const& o) const { return (m_data != o.m_data); }
-
         /// Checks if the `connection` represented by this object is (still) connected.
         inline bool connected() const { return (m_data && m_data->connected); }
 
@@ -57,27 +54,31 @@ namespace signals {
         /// target callback will not be triggered anymore. If there are currently some
         /// active calls running via this `connection` the `disconnect` call blocks until
         /// all calls have finished.
-        inline void disconnect(bool wait_if_running = false) {
-            if(!m_data) { return; }
+        inline bool disconnect(bool wait_if_running = false) {
+            auto d = m_data;
+            if(!d) { return false; }
 
-            m_data->connected = false;
+            const bool was_connected = d->connected.exchange(false);
 
             if(wait_if_running) {
-                while(m_data->running > 0) {
+                while(d->running > 0) {
                     std::this_thread::yield();
                 }
             }
+
+            return was_connected;
         }
 
     public:
         // only for internal use
         template<typename CB>
         inline void call(CB&& cb) {
-            if(!m_data || !m_data->connected) { return; }
+            auto d = m_data;
+            if(!d || !d->connected) { return; }
 
-            ++m_data->running;
-            if(m_data->connected) { cb(); }
-            --m_data->running;
+            ++d->running;
+            if(d->connected) { cb(); }
+            --d->running;
         }
 
         // only for internal use

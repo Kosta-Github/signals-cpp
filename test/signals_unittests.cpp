@@ -52,8 +52,8 @@ CATCH_TEST_CASE(
     sig.fire(42);
     CATCH_CHECK(value == 42);
 
-    CATCH_CHECK(sig.disconnect(conn));
-    CATCH_CHECK_FALSE(sig.disconnect(conn)); // cannot be removed a second time
+    CATCH_CHECK(conn.disconnect());
+    CATCH_CHECK_FALSE(conn.disconnect()); // cannot be disconnected a second time
     sig.fire(84);
     CATCH_CHECK(value == 42); // still needs to be 42, since we disconnected
 }
@@ -67,11 +67,11 @@ CATCH_TEST_CASE(
     auto connTrue = sig.connect([&](int) { });
     auto connFalse = signals::connection();
 
-    CATCH_CHECK(sig.connected(connTrue));
-    CATCH_CHECK_FALSE(sig.connected(connFalse));
+    CATCH_CHECK(connTrue.connected());
+    CATCH_CHECK_FALSE(connFalse.connected());
 
-    CATCH_CHECK(sig.disconnect(connTrue));
-    CATCH_CHECK_FALSE(sig.connected(connTrue));
+    CATCH_CHECK(connTrue.disconnect());
+    CATCH_CHECK_FALSE(connTrue.connected());
 }
 
 CATCH_TEST_CASE(

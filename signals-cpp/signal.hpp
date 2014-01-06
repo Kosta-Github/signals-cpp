@@ -53,15 +53,9 @@ namespace signals {
             // lock the mutex for writing
             std::lock_guard<std::mutex> lock(m_write_targets_mutex);
 
-            // copy existing and still active targets
+            // copy existing targets
             if(auto t = m_targets) {
-                new_targets->reserve(t->size() + 1);
-
-                std::copy_if(
-                    t->begin(), t->end(),
-                    std::back_inserter(*new_targets),
-                    [](connection_target const& i) { return i.conn.connected(); }
-                );
+                *new_targets = *t;
             }
 
             // add the new connection to the new vector
@@ -128,22 +122,6 @@ namespace signals {
 
 #endif // defined(SIGNALS_CPP_HAVE_VARIADIC_TEMPLATES)
 
-        inline bool disconnect(connection conn, bool wait_if_running = false) {
-            if(!conn.connected()) { return false; }
-
-            // try to find the matching target
-            if(auto t = m_targets) {
-                if(find(conn, *t) != t->end()) {
-                    // disconnect the connection but keep it in the targets list
-                    conn.disconnect(wait_if_running);
-                    return true;
-                }
-            }
-
-            // not found
-            return false;
-        }
-
         inline void disconnect_all(bool wait_if_running) {
             auto t = decltype(m_targets)(nullptr);
 
@@ -156,23 +134,8 @@ namespace signals {
 
             // disconnect all targets
             if(t) {
-                for(auto&& i : *t) { i.conn.disconnect(false); }
-                if(wait_if_running) { for(auto&& i : *t) { i.conn.disconnect(true); } }
+                for(auto&& i : *t) { i.conn.disconnect(wait_if_running); }
             }
-        }
-
-        inline bool connected(connection conn) const {
-            // if the connection is not connected to something it cannot
-            // be connected this signal
-            if(!conn.connected()) { return false; }
-
-            // check if we can find the requested connection in the list of
-            // stored connections
-            if(auto t = m_targets) {
-                return (find(conn, *t) != t->end());
-            }
-
-            return false;
         }
 
 #if defined(SIGNALS_CPP_HAVE_VARIADIC_TEMPLATES)
@@ -259,15 +222,6 @@ namespace signals {
 
         mutable std::mutex m_write_targets_mutex;
         std::shared_ptr<std::vector<connection_target>> m_targets;
-
-        template<typename CONT>
-        inline static auto find(connection conn, CONT&& cont) -> decltype(cont.begin()) {
-            return std::find_if(
-                cont.begin(), cont.end(),
-                [&](connection_target const& i) { return (i.conn == conn); }
-            );
-        }
-
     };
 
 } // namespace signals

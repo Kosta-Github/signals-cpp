@@ -70,3 +70,4 @@ The `connections` get automatically disconnected on destruction of either object
 external dependencies
 =====================
 - [catch](https://github.com/philsquared/Catch) (only for unit tests)
+- [cmake](http://cmake.org) (build system; only for the unit tests)

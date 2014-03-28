@@ -21,12 +21,24 @@
 // CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 //
 
-#define CATCH_CONFIG_RUNNER
-#include <catch/catch.hpp>
+#include <cute/cute.hpp>
+#include <cute/reporters/reporter_ide.hpp>
 
-int main(int const argc, char* const argv[]) {
-    std::wcout.precision(17);
-    std::wcerr.precision(17);
+CUTE_INIT(); // initialize the cute framework
 
-    return Catch::Session().run(argc, argv);
+int main(int argc, char* argv[]) {
+    // create the test suite execution context
+    auto context = cute::context();
+
+    // print out the status of each test during the execution of the test suite
+    context.reporters.emplace_back(cute::reporter_ide);
+
+    // run the test suite
+    auto results = context.run();
+
+    // print out the test suite result summary
+    cute::reporter_ide_summary(results);
+
+    // exit with an exit code indicating success or failure for the test suite
+    return ((results.test_cases_failed > 0) ? EXIT_FAILURE : EXIT_SUCCESS);
 }

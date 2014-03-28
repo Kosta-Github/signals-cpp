@@ -3,9 +3,8 @@ cmake_minimum_required(VERSION 2.8)
 project(signals-cpp CXX)
 message("configure: signals-cpp unittests")
 
-# configure catch
-include_directories("${SIGNALS_CPP_3RD_PARTY_DIR}/catch/include")
-add_definitions(-DCATCH_CONFIG_PREFIX_ALL)
+# configure cute
+include_directories("${SIGNALS_CPP_3RD_PARTY_DIR}/cute/")
 
 add_executable(
 	signals_unittests

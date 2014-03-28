@@ -8,6 +8,7 @@ include(CheckCXXCompilerFlag)
 CHECK_CXX_COMPILER_FLAG("-std=c++0x" HAS_CXX0x)
 CHECK_CXX_COMPILER_FLAG("-std=c++11" HAS_CXX11)
 CHECK_CXX_COMPILER_FLAG("-std=c++11 -stdlib=libc++" HAS_LIBCXX11)
+CHECK_CXX_COMPILER_FLAG("-pthread" HAS_PTHREAD)
 
 # switch to the right compiler
 if(HAS_LIBCXX11)
@@ -20,8 +21,7 @@ elseif(MSVC)
 #    add_definitions()
 endif()
 
-# check for adding a reference to the pthread lib
-CHECK_CXX_COMPILER_FLAG("-pthread" HAS_PTHREAD)
+# add reference to the pthread lib
 if(HAS_PTHREAD)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pthread")
 endif(HAS_PTHREAD)

@@ -21,15 +21,15 @@
 // CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 //
 
-#include <catch/catch.hpp>
+#include <cute/cute.hpp>
 
 #include <signals-cpp/connections.hpp>
 
 #include "stepper.hpp"
 
-CATCH_TEST_CASE(
+CUTE_TEST(
     "test a single simple connection",
-    "[signals][signals_01][single-threaded]"
+    "[signals],[signals_01],[single-threaded]"
 ) {
     signals::signal<void(int v)> sig;
 
@@ -37,12 +37,12 @@ CATCH_TEST_CASE(
     sig.connect([&](int v) { value = v; });
 
     sig.fire(42);
-    CATCH_CHECK(value == 42);
+    CUTE_ASSERT(value == 42);
 }
 
-CATCH_TEST_CASE(
+CUTE_TEST(
     "test to disconnect a single simple connection",
-    "[signals][signals_02][single-threaded]"
+    "[signals],[signals_02],[single-threaded]"
 ) {
     signals::signal<void(int v)> sig;
 
@@ -50,33 +50,33 @@ CATCH_TEST_CASE(
     auto conn = sig.connect([&](int v) { value = v; });
 
     sig.fire(42);
-    CATCH_CHECK(value == 42);
+    CUTE_ASSERT(value == 42);
 
-    CATCH_CHECK(conn.disconnect());
-    CATCH_CHECK_FALSE(conn.disconnect()); // cannot be disconnected a second time
+    CUTE_ASSERT(conn.disconnect());
+    CUTE_ASSERT(!conn.disconnect()); // cannot be disconnected a second time
     sig.fire(84);
-    CATCH_CHECK(value == 42); // still needs to be 42, since we disconnected
+    CUTE_ASSERT(value == 42); // still needs to be 42, since we disconnected
 }
 
-CATCH_TEST_CASE(
+CUTE_TEST(
     "test to check the existance of a connection",
-    "[signals][signals_03][single-threaded]"
+    "[signals],[signals_03],[single-threaded]"
 ) {
     signals::signal<void(int v)> sig;
 
     auto connTrue = sig.connect([&](int) { });
     auto connFalse = signals::connection();
 
-    CATCH_CHECK(connTrue.connected());
-    CATCH_CHECK_FALSE(connFalse.connected());
+    CUTE_ASSERT(connTrue.connected());
+    CUTE_ASSERT(!connFalse.connected());
 
-    CATCH_CHECK(connTrue.disconnect());
-    CATCH_CHECK_FALSE(connTrue.connected());
+    CUTE_ASSERT(connTrue.disconnect());
+    CUTE_ASSERT(!connTrue.connected());
 }
 
-CATCH_TEST_CASE(
+CUTE_TEST(
     "test multiple simple connections",
-    "[signals][signals_04][single-threaded]"
+    "[signals],[signals_04],[single-threaded]"
 ) {
     signals::signal<void(int v)> sig;
 
@@ -85,13 +85,13 @@ CATCH_TEST_CASE(
     sig.connect([&](int v) { value2 = v * 2; });
 
     sig.fire(42);
-    CATCH_CHECK(value1 == 42);
-    CATCH_CHECK(value2 == 84);
+    CUTE_ASSERT(value1 == 42);
+    CUTE_ASSERT(value2 == 84);
 }
 
-CATCH_TEST_CASE(
+CUTE_TEST(
     "test the connections mediator",
-    "[signals][signals_05][single-threaded]"
+    "[signals],[signals_05],[single-threaded]"
 ) {
     signals::signal<void(int v)> sig;
     signals::connections conns;
@@ -101,18 +101,18 @@ CATCH_TEST_CASE(
     conns.connect(sig, [&](int v) { value2 = v * 2; });
 
     sig.fire(42);
-    CATCH_CHECK(value1 == 42);
-    CATCH_CHECK(value2 == 84);
+    CUTE_ASSERT(value1 == 42);
+    CUTE_ASSERT(value2 == 84);
 
     conns.disconnect_all();
     sig.fire(21);
-    CATCH_CHECK(value1 == 42); // should be the same as above
-    CATCH_CHECK(value2 == 84); // should be the same as above
+    CUTE_ASSERT(value1 == 42); // should be the same as above
+    CUTE_ASSERT(value2 == 84); // should be the same as above
 }
 
-CATCH_TEST_CASE(
+CUTE_TEST(
     "test to connect to a method",
-    "[signals][signals_06][single-threaded]"
+    "[signals],[signals_06],[single-threaded]"
 ) {
     struct Test {
         Test() : v(0) {
@@ -130,18 +130,18 @@ CATCH_TEST_CASE(
     };
 
     Test t;
-    CATCH_CHECK(t.v == 0);
+    CUTE_ASSERT(t.v == 0);
 
     t.sigVoid.fire();
-    CATCH_CHECK(t.v == 1510);
+    CUTE_ASSERT(t.v == 1510);
 
     t.sigInt.fire(42);
-    CATCH_CHECK(t.v == 42);
+    CUTE_ASSERT(t.v == 42);
 }
 
-CATCH_TEST_CASE(
+CUTE_TEST(
     "test to connect to a method with inheriting from signals::connections",
-    "[signals][signals_07][single-threaded]"
+    "[signals],[signals_07],[single-threaded]"
 ) {
     struct Test : signals::connections {
         Test() : v(0) {
@@ -158,31 +158,31 @@ CATCH_TEST_CASE(
     };
 
     Test t;
-    CATCH_CHECK(t.v == 0);
+    CUTE_ASSERT(t.v == 0);
 
     t.sigVoid.fire();
-    CATCH_CHECK(t.v == 1510);
+    CUTE_ASSERT(t.v == 1510);
 
     t.sigInt.fire(42);
-    CATCH_CHECK(t.v == 42);
+    CUTE_ASSERT(t.v == 42);
 }
 
-CATCH_TEST_CASE(
+CUTE_TEST(
     "test to disconnect a connection from within the callback triggered by that connection",
-    "[signals][signals_08][single-threaded]"
+    "[signals],[signals_08],[single-threaded]"
 ) {
     signals::signal<void()> sig;
     signals::connection conn;
 
     conn = sig.connect([&]() { conn.disconnect(false); });
-    CATCH_CHECK(conn.connected());
+    CUTE_ASSERT(conn.connected());
     sig.fire();
-    CATCH_CHECK_FALSE(conn.connected());
+    CUTE_ASSERT(!conn.connected());
 }
 
-CATCH_TEST_CASE(
+CUTE_TEST(
     "test to disconnect a connection from within the callback triggered by that connection on another thread",
-    "[signals][signals_09][multi-threaded]"
+    "[signals],[signals_09],[multi-threaded]"
 ) {
     signals::signal<void()> sig;
     signals::connection conn;
@@ -199,17 +199,17 @@ CATCH_TEST_CASE(
         step.reached(5);
     });
 
-    step.execute_at(0, [&]() { CATCH_CHECK(conn.connected()); });
-    step.execute_at(3, [&]() { CATCH_CHECK_FALSE(conn.connected()); });
-    CATCH_CHECK(step.returns_after(4, [&]() { conn.disconnect(true); }));
+    step.execute_at(0, [&]() { CUTE_ASSERT(conn.connected()); });
+    step.execute_at(3, [&]() { CUTE_ASSERT(!conn.connected()); });
+    CUTE_ASSERT(step.returns_after(4, [&]() { conn.disconnect(true); }));
     step.reached(6);
 
     t.join();
 }
 
-CATCH_TEST_CASE(
+CUTE_TEST(
     "test to connect a new connection from within the callback triggered by a signal",
-    "[signals][signals_10][single-threaded]"
+    "[signals],[signals_10],[single-threaded]"
 ) {
     signals::signal<void()> sig;
     signals::connection conn1, conn2;
@@ -220,75 +220,72 @@ CATCH_TEST_CASE(
         conn2 = sig.connect([&]() { value = 42; });
     });
 
-    CATCH_CHECK(conn1.connected());
-    CATCH_CHECK_FALSE(conn2.connected());
-    CATCH_CHECK(value == 0);
+    CUTE_ASSERT(conn1.connected());
+    CUTE_ASSERT(!conn2.connected());
+    CUTE_ASSERT(value == 0);
 
     sig.fire();
-    CATCH_CHECK_FALSE(conn1.connected());
-    CATCH_CHECK(conn2.connected());
-    CATCH_CHECK(value == 0);
+    CUTE_ASSERT(!conn1.connected());
+    CUTE_ASSERT(conn2.connected());
+    CUTE_ASSERT(value == 0);
 
     sig.fire();
-    CATCH_CHECK_FALSE(conn1.connected());
-    CATCH_CHECK(conn2.connected());
-    CATCH_CHECK(value ==42);
+    CUTE_ASSERT(!conn1.connected());
+    CUTE_ASSERT(conn2.connected());
+    CUTE_ASSERT(value ==42);
 }
 
-CATCH_TEST_CASE(
+CUTE_TEST(
     "test to connect a new connection from within the callback triggered by a signal and immediately trigger "
     "this new connection from another thread without the need to finish the first trigger before that",
-    "[signals][signals_11][multi-threaded]"
+    "[signals],[signals_11],[multi-threaded]"
 ) {
     signals::signal<void()> sig;
     signals::connection conn1, conn2;
     int value = 0;
 
-    signals::test::stepper step;
+    cute::tick ticker;
 
     conn1 = sig.connect([&]() {
-        step.execute_at(2, [&]() { conn1.disconnect(); });
-        step.execute_at(4, [&]() { conn2 = sig.connect([&]() { value = 42; }); });
-        step.reached(9);
+        ticker.at_tick(2, [&]() { conn1.disconnect(); });
+        ticker.at_tick(4, [&]() { conn2 = sig.connect([&]() { value = 42; }); });
+        ticker.reached_tick(9);
     });
-    auto t1 = std::thread([&]() {
-        step.reached(1);
+    auto t1 = cute::thread([&]() {
+        ticker.reached_tick(1);
         sig.fire();
-        step.reached(10);
+        ticker.reached_tick(10);
     });
 
-    auto t2 = std::thread([&]() {
-        step.reached(6);
+    auto t2 = cute::thread([&]() {
+        ticker.reached_tick(6);
         sig.fire();
-        step.reached(7);
+        ticker.reached_tick(7);
     });
 
-    step.execute_at(0, [&]() {
-        CATCH_CHECK(conn1.connected());
-        CATCH_CHECK_FALSE(conn2.connected());
-        CATCH_CHECK(value == 0);
+    ticker.at_tick(0, [&]() {
+        CUTE_ASSERT(conn1.connected());
+        CUTE_ASSERT(!conn2.connected());
+        CUTE_ASSERT(value == 0);
     });
 
-    step.execute_at(3, [&]() {
-        CATCH_CHECK_FALSE(conn1.connected());
-        CATCH_CHECK_FALSE(conn2.connected());
-        CATCH_CHECK(value == 0);
+    ticker.at_tick(3, [&]() {
+        CUTE_ASSERT(!conn1.connected());
+        CUTE_ASSERT(!conn2.connected());
+        CUTE_ASSERT(value == 0);
     });
 
-    step.execute_at(5, [&]() {
-        CATCH_CHECK_FALSE(conn1.connected());
-        CATCH_CHECK(conn2.connected());
-        CATCH_CHECK(value == 0);
+    ticker.at_tick(5, [&]() {
+        CUTE_ASSERT(!conn1.connected());
+        CUTE_ASSERT(conn2.connected());
+        CUTE_ASSERT(value == 0);
     });
 
-    step.execute_at(8, [&]() {
-        CATCH_CHECK_FALSE(conn1.connected());
-        CATCH_CHECK(conn2.connected());
-        CATCH_CHECK(value == 42);
+    ticker.at_tick(8, [&]() {
+        CUTE_ASSERT(!conn1.connected());
+        CUTE_ASSERT(conn2.connected());
+        CUTE_ASSERT(value == 42);
     });
 
-    step.reached(11);
-
-    t1.join();
-    t2.join();
+    ticker.reached_tick(11);
 }

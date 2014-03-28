@@ -1,0 +1,36 @@
+# This is the config file for building this project and running its unit test suite with Travis-ci.org
+
+language: cpp
+
+compiler:
+  - gcc
+#  - clang
+
+env:
+  - BUILD_CONFIG=Debug
+  - BUILD_CONFIG=Release
+
+before_install:
+  # update git submodules (if required)
+  - git submodule update --init --recursive
+
+  # update the apt repository
+  - sudo add-apt-repository -y ppa:ubuntu-toolchain-r/test
+  - sudo add-apt-repository -y "deb http://archive.ubuntu.com/ubuntu/ saucy main universe"
+  - sudo add-apt-repository -y "deb http://archive.ubuntu.com/ubuntu/ raring main universe"
+  - sudo add-apt-repository -y "deb http://archive.ubuntu.com/ubuntu/ trusty main universe"
+  - sudo add-apt-repository -y "deb http://llvm.org/apt/saucy/ llvm-toolchain-saucy main"
+  - wget -O - http://llvm.org/apt/llvm-snapshot.gpg.key | sudo apt-key add -
+  - sudo apt-get update -qq
+  - sudo apt-get install -qq cmake
+  - if [ "$CXX" = "g++"     ]; then sudo apt-get install -qq g++-4.8; fi
+  - if [ "$CXX" = "g++"     ]; then export CXX="g++-4.8" CC="gcc-4.8"; fi
+  - if [ "$CXX" = "clang++" ]; then sudo apt-get install -qq clang-3.4 lldb-3.4 -t trusty; fi
+
+install:
+  - echo CXX=$CXX
+  - $CXX --version
+  - cmake -DCMAKE_BUILD_TYPE=$BUILD_CONFIG
+
+script:
+  - make -k && ctest -V --timeout 60

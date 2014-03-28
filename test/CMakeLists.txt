@@ -9,7 +9,6 @@ include_directories("${SIGNALS_CPP_3RD_PARTY_DIR}/cute/")
 add_executable(
 	signals_unittests
 	main.cpp
-	stepper.hpp
 	signals_unittests.cpp
 	../signals-cpp/config.hpp
 	../signals-cpp/connection.hpp

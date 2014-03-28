@@ -67,7 +67,7 @@ namespace cute {
         template<typename DELAY>
         inline void delay_tick_for(int tick_, DELAY&& delay_) {
             // just schedule a sleep operation for the given tick
-            at_tick(tick_, [=]() { std::this_thread::sleep_for(std::forward<DELAY>(delay_)); });
+            at_tick(tick_, [=]() { std::this_thread::sleep_for(delay_); });
         }
 
     private:

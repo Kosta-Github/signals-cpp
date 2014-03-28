@@ -25,8 +25,6 @@
 
 #include <signals-cpp/connections.hpp>
 
-#include "stepper.hpp"
-
 CUTE_TEST(
     "test a single simple connection",
     "[signals],[signals_01],[single-threaded]"
@@ -187,24 +185,22 @@ CUTE_TEST(
     signals::signal<void()> sig;
     signals::connection conn;
 
-    signals::test::stepper step;
+    cute::tick ticker;
 
     conn = sig.connect([&]() {
-        step.execute_at(2, [&]() { conn.disconnect(false); });
-        step.delay(4, std::chrono::milliseconds(10));
+        ticker.at_tick(2, [&]() { conn.disconnect(false); });
+        ticker.delay_tick_for(4, std::chrono::milliseconds(10));
     });
-    auto t = std::thread([&]() {
-        step.reached(1);
+    auto t = cute::thread([&]() {
+        ticker.reached_tick(1);
         sig.fire();
-        step.reached(5);
+        ticker.reached_tick(5);
     });
 
-    step.execute_at(0, [&]() { CUTE_ASSERT(conn.connected()); });
-    step.execute_at(3, [&]() { CUTE_ASSERT(!conn.connected()); });
-    CUTE_ASSERT(step.returns_after(4, [&]() { conn.disconnect(true); }));
-    step.reached(6);
-
-    t.join();
+    ticker.at_tick(0, [&]() { CUTE_ASSERT(conn.connected()); });
+    ticker.at_tick(3, [&]() { CUTE_ASSERT(!conn.connected()); });
+    ticker.blocks_until_tick(4, [&]() { conn.disconnect(true); });
+    ticker.reached_tick(6);
 }
 
 CUTE_TEST(

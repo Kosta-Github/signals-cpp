@@ -30,7 +30,7 @@ usage
 related work
 ============
 
-`cute is based on the following ideas and frameworks:
+`cute` is based on the following ideas and frameworks:
 - [lest](https://github.com/martinmoene/lest)
 - [catch](https://github.com/philsquared/Catch)
 - [turtle](http://turtle.sourceforge.net/)

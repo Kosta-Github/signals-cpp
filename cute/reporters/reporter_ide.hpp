@@ -45,11 +45,10 @@ namespace cute {
         auto test_header = detail::ide_make_file_line_string(res.test.file, res.test.line) + type;
         out << test_header << res.test.name;
         if(test_index_max > 1) { out << " [" << (test_index_cur + 1) << "/" << test_index_max << "]"; }
-        out << std::endl;
-
         if(res.result != result_type::skip) {
-            out << test_header << "    duration:   " << res.duration_ms << " ms" << std::endl;
+            out << "; duration: " << res.duration_ms << " ms";
         }
+        out << std::endl;
 
         if(auto ex = res.excp.get()) {
             auto ex_header = detail::ide_make_file_line_string(ex->file, ex->line) + type;
@@ -79,11 +78,11 @@ namespace cute {
     ) {
         out << std::endl;
         out << "test suite summary:" << std::endl;
-        out << results.test_cases_passed    << " out of " << results.test_results.size() << " tests passed."    << std::endl;
-        out << results.test_cases_skipped   << " out of " << results.test_results.size() << " tests skipped."   << std::endl;
-        out << results.test_cases_failed    << " out of " << results.test_results.size() << " tests failed."    << std::endl;
-        out << results.checks_performed     << " checks performed."                                             << std::endl;
-        out << results.duration_ms          << " ms used for the whole test suite."                             << std::endl;
+        out << results.test_cases_passed    << "/" << results.test_results.size() << " tests passed."    << std::endl;
+        out << results.test_cases_skipped   << "/" << results.test_results.size() << " tests skipped."   << std::endl;
+        out << results.test_cases_failed    << "/" << results.test_results.size() << " tests failed."    << std::endl;
+        out << results.checks_performed     << " checks performed."                                      << std::endl;
+        out << results.duration_ms          << " ms used for the whole test suite."                      << std::endl;
     }
 
     inline void reporter_ide_summary(

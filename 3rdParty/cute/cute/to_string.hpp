@@ -29,4 +29,6 @@ namespace cute {
     template<typename T>
     inline std::string to_string(std::weak_ptr<T> const& p) { std::ostringstream os; os << p.get(); return os.str(); }
 
+    inline std::string to_string(std::type_info const& ti) { return ti.name(); }
+
 } // namespace cute

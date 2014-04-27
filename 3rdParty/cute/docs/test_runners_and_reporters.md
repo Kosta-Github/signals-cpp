@@ -3,8 +3,8 @@ Simple IDE reporter
 
 A test runner using the provided simple IDE reporter would like like this:
 ```C++
-#include "../cute/cute.hpp"
-#include "../cute/reporters/reporter_ide.hpp"
+#include <cute/cute.hpp>
+#include <cute/reporters/reporter_ide.hpp>
 
 CUTE_INIT(); // initialize the cute framework
 
@@ -32,8 +32,8 @@ Simple JUnit reporter
 
 A test runner using the provided `JUnit` reporter would like like this:
 ```C++
-#include "../cute/cute.hpp"
-#include "../cute/reporters/reporter_junit.hpp"
+#include <cute/cute.hpp>
+#include <cute/reporters/reporter_junit.hpp>
 
 CUTE_INIT(); // initialize the cute framework
 

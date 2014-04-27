@@ -31,11 +31,11 @@ namespace cute {
                 // two actions have been registered for the same tick)
                 CUTE_ASSERT(m_tick == tick_, CUTE_CAPTURE("at_tick(): several actions registered for the same tick"));
 
-                // perform the action
-                func_();
-
                 // update the current tick
                 ++m_tick;
+
+                // perform the action
+                func_();
             }
 
             // wakeup other waiting threads again to let them check
@@ -49,25 +49,19 @@ namespace cute {
             at_tick(tick_, []() { });
         }
 
+        template<typename DELAY>
+        inline void delay_tick_for(int tick_, DELAY&& delay_) {
+            // just schedule a sleep operation for the given tick
+            at_tick(tick_, [=]() { std::this_thread::sleep_for(delay_); });
+        }
+        
         template<typename FUNC>
         inline void blocks_until_tick(int tick_, FUNC&& func_) {
             // perform the action and check afterwards that
             // the action didn't return too early
             func_();
 
-            // we can check this condition without a lock of the
-            // mutex since m_tick is an atomic; if this condition
-            // is fulfilled everything is fine and we are done here
-            if(m_tick >= tick_) { return; }
-
-            std::unique_lock<std::mutex> lock(m_mutex);
             CUTE_ASSERT(m_tick >= tick_, CUTE_CAPTURE("blocks_until_tick(): function returned too early"));
-        }
-
-        template<typename DELAY>
-        inline void delay_tick_for(int tick_, DELAY&& delay_) {
-            // just schedule a sleep operation for the given tick
-            at_tick(tick_, [=]() { std::this_thread::sleep_for(delay_); });
         }
 
     private:

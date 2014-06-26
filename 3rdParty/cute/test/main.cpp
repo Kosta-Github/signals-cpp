@@ -82,9 +82,9 @@ int main(int argc, char* argv[]) {
 
     out << std::endl;
     out << "test summary:" << std::endl;
-    out << tests_passed     << " out of " << tests_all << " tests passed."  << std::endl;
-    out << tests_skipped    << " out of " << tests_all << " tests skipped." << std::endl;
-    out << tests_failed     << " out of " << tests_all << " tests failed."  << std::endl;
+    out << tests_passed     << "/" << tests_all << " tests passed."  << std::endl;
+    out << tests_skipped    << "/" << tests_all << " tests skipped." << std::endl;
+    out << tests_failed     << "/" << tests_all << " tests failed."  << std::endl;
     out << checks_performed << " checks performed."                         << std::endl;
     out << duration_ms      << " ms used for the whole test suite."         << std::endl;
     

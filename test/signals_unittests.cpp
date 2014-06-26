@@ -39,6 +39,22 @@ CUTE_TEST(
 }
 
 CUTE_TEST(
+    "test a single simple connection with fire_if()",
+    "[signals],[signals_01],[fire_if],[single-threaded]"
+) {
+    signals::signal<void(int v)> sig;
+
+    int value = 0;
+    sig.connect([&](int v) { value = v; });
+
+    sig.fire_if(false, 42);
+    CUTE_ASSERT(value == 0);
+
+    sig.fire_if(true, 42);
+    CUTE_ASSERT(value == 42);
+}
+
+CUTE_TEST(
     "test to disconnect a single simple connection",
     "[signals],[signals_02],[single-threaded]"
 ) {

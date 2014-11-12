@@ -227,8 +227,8 @@ namespace signals {
         }
 
         inline signal& operator=(signal&& o) SIGNALS_CPP_NOEXCEPT {
-            // use std::lock to acquire two locks without worrying about 
-            // other calls to assign_lunch_partner deadlocking us
+            // use std::lock(...) in combination with std::defer_lock to acquire two locks
+            // without worrying about potential deadlocks (see: http://en.cppreference.com/w/cpp/thread/lock)
             std::unique_lock<std::mutex> lock1(m_write_targets_mutex,   std::defer_lock);
             std::unique_lock<std::mutex> lock2(o.m_write_targets_mutex, std::defer_lock);
             std::lock(lock1, lock2);

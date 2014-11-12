@@ -221,13 +221,18 @@ namespace signals {
 
 #if defined(SIGNALS_CPP_NEED_EXPLICIT_MOVE)
     public:
-        inline signal(signal&& o) SIGNALS_CPP_NOEXCEPT :
-            m_write_targets_mutex(std::move(o.m_write_targets_mutex)),
-            m_targets(std::move(o.m_targets))
-        { }
+        inline signal(signal&& o) SIGNALS_CPP_NOEXCEPT {
+            std::lock_guard<std::mutex> lock(o.m_write_targets_mutex);
+            m_targets = std::move(o.m_targets);
+        }
 
         inline signal& operator=(signal&& o) SIGNALS_CPP_NOEXCEPT {
-            m_write_targets_mutex = std::move(o.m_write_targets_mutex);
+            // use std::lock to acquire two locks without worrying about 
+            // other calls to assign_lunch_partner deadlocking us
+            std::unique_lock<std::mutex> lock1(m_write_targets_mutex,   std::defer_lock);
+            std::unique_lock<std::mutex> lock2(o.m_write_targets_mutex, std::defer_lock);
+            std::lock(lock1, lock2);
+ 
             m_targets = std::move(o.m_targets);
             return *this;
         }

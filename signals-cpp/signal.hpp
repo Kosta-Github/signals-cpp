@@ -142,7 +142,7 @@ namespace signals {
 
         template<typename... ARGS>
         inline void fire_if(bool condition, ARGS const&... args) const {
-            if(conidition) {
+            if(condition) {
                 if(auto t = m_targets) {
                     for(auto& i : *t) { i.conn.call([&]() { i.target(args...); }); }
                 }

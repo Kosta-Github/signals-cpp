@@ -23,9 +23,10 @@
 
 #pragma once
 
-#include "signal.hpp"
-
 #include <utility>
+#include <vector>
+
+#include "connection.hpp"
 
 namespace signals {
 
@@ -50,7 +51,7 @@ namespace signals {
         /// Connects to the given `signal` `s` and adds the created `connection` to
         /// the list of tracked connections.
         template<typename SIGNAL, typename... ARGS>
-        inline connection connect(SIGNAL& s, ARGS&&... args) {
+		inline connection connect(SIGNAL& s, ARGS&&... args) {
             auto conn = s.connect(std::forward<ARGS>(args)...);
             add(conn);
             return conn;
@@ -59,13 +60,13 @@ namespace signals {
 #else //  defined(SIGNALS_CPP_HAVE_VARIADIC_TEMPLATES)
 
         template<typename SIGNAL, typename ARG1>
-        inline connection connect(SIGNAL& s, ARG1&& arg1) {
+		inline connection connect(SIGNAL& s, ARG1&& arg1) {
             auto conn = s.connect(std::forward<ARG1>(arg1));
             add(conn);
             return conn;
         }
 
-        template<typename SIGNAL, typename ARG1, typename ARG2>
+		template<typename SIGNAL, typename ARG1, typename ARG2>
         inline connection connect(SIGNAL& s, ARG1&& arg1, ARG2&& arg2) {
             auto conn = s.connect(std::forward<ARG1>(arg1), std::forward<ARG2>(arg2));
             add(conn);

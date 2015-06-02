@@ -23,14 +23,14 @@
 
 #pragma once
 
-#include "connection.hpp"
-
 #include <algorithm>
 #include <cassert>
 #include <functional>
 #include <memory>
 #include <mutex>
 #include <vector>
+
+#include "connections.hpp"
 
 namespace signals {
 

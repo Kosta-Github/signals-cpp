@@ -23,7 +23,7 @@
 
 #include <cute/cute.hpp>
 
-#include <signals-cpp/connections.hpp>
+#include <signals-cpp/signals.hpp>
 
 CUTE_TEST(
     "test a single simple connection",

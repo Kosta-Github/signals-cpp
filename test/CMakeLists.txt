@@ -14,6 +14,7 @@ add_executable(
 	../signals-cpp/connection.hpp
 	../signals-cpp/connections.hpp
 	../signals-cpp/signal.hpp
+	../signals-cpp/signals.hpp
 )
 	 
 add_test(

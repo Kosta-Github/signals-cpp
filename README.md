@@ -1,4 +1,4 @@
-signals-cpp [![Build Status](https://travis-ci.org/Kosta-Github/signals-cpp.png)](https://travis-ci.org/Kosta-Github/signals-cpp)
+signals-cpp [![Build Status](https://travis-ci.org/Kosta-Github/signals-cpp.png)](https://travis-ci.org/Kosta-Github/signals-cpp) [![Build status AppVeyor](https://ci.appveyor.com/api/projects/status/sy18l6fns0046xxb/branch/master?svg=true)](https://ci.appveyor.com/project/Kosta-Github/signals-cpp/branch/master)
 ===========
 Provide a very simple header-only C++ interface for creating and managing signal-slot-connections in an easy and thread-safe manner.
 

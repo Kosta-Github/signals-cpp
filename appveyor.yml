@@ -1,0 +1,19 @@
+version: 1.0.{build}
+
+configuration:
+- Debug
+- Release
+
+platform:
+- x64
+
+before_build:
+- config-VS2012-win64.bat
+
+build:
+  project: Build\signal-cpp.sln
+  parallel: true
+  verbosity: minimal
+
+test_script:
+- cd Build && ctest --verbose --timeout 120 --build-config %CONFIGURATION%

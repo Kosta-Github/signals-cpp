@@ -60,7 +60,8 @@ namespace signals {
                     if(i.conn.connected()) {
                         new_targets->push_back(i);
                     }
-                }            }
+                }
+            }
 
             // add the new connection to the new vector
             new_targets->emplace_back(conn, std::move(target));

@@ -55,7 +55,12 @@ namespace signals {
 
             // copy existing targets
             if(auto t = m_targets) {
-                *new_targets = *t;
+                new_targets->reserve(t->size() + 1);
+                for(const auto& i : *t) {
+                    if(i.conn.connected()) {
+                        new_targets->push_back(i);
+                    }
+                }
             }
 
             // add the new connection to the new vector

@@ -55,7 +55,12 @@ namespace signals {
 
             // copy existing targets
             if(auto t = m_targets) {
-                *new_targets = *t;
+                new_targets->reserve(t->size() + 1);
+                for(const auto& i : *t) {
+                    if(i.conn.connected()) {
+                        new_targets->push_back(i);
+                    }
+                }
             }
 
             // add the new connection to the new vector
@@ -243,7 +248,6 @@ namespace signals {
 
 #endif // defined(SIGNALS_CPP_HAVE_VARIADIC_TEMPLATES)
 
-#if defined(SIGNALS_CPP_NEED_EXPLICIT_MOVE)
     public:
         inline signal(signal&& o) SIGNALS_CPP_NOEXCEPT {
             std::lock_guard<std::mutex> lock(o.m_write_targets_mutex);
@@ -260,7 +264,6 @@ namespace signals {
             m_targets = std::move(o.m_targets);
             return *this;
         }
-#endif // defined(SIGNALS_CPP_NEED_EXPLICIT_MOVE)
 
     private:
         signal(signal const& o); // = delete;

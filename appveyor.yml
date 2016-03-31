@@ -11,7 +11,7 @@ before_build:
 - config-VS2012-win64.bat
 
 build:
-  project: Build\signal-cpp.sln
+  project: Build\signals-cpp.sln
   parallel: true
   verbosity: minimal
 

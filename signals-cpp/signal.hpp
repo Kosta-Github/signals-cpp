@@ -197,7 +197,7 @@ namespace signals {
             }
         }
         template<typename ARG1, typename ARG2>
-        inline void fire(ARG1& arg1, ARG2& arg2) const {
+        inline void fire(ARG1&& arg1, ARG2&& arg2) const {
             fire_if(true, std::forward<ARG1>(arg1), std::forward<ARG2>(arg2));
         }
 

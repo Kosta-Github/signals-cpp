@@ -148,7 +148,7 @@ namespace signals {
         template<typename... ARGS>
         inline void fire_if(bool condition, ARGS&&... args) const {
             if(condition) {
-                if(auto t = m_targets) {
+                if(auto t = get_targets()) {
                     for(auto& i : *t) { i.conn.call([&]() { i.target(std::forward<ARGS>(args)...); }); }
                 }
             }
@@ -160,7 +160,7 @@ namespace signals {
 
         inline void fire_if(bool condition) const {
             if(condition) {
-                if(auto t = m_targets) {
+                if(auto t = get_targets()) {
                     for(auto& i : *t) {
                         i.conn.call([&]() { i.target(); });
                     }
@@ -174,7 +174,7 @@ namespace signals {
         template<typename ARG1>
         inline void fire_if(bool condition, ARG1&& arg1) const {
             if(condition) {
-                if(auto t = m_targets) {
+                if(auto t = get_targets()) {
                     for(auto& i : *t) {
                         i.conn.call([&]() { i.target(std::forward<ARG1>(arg1)); });
                     }
@@ -189,7 +189,7 @@ namespace signals {
         template<typename ARG1, typename ARG2>
         inline void fire_if(bool condition, ARG1&& arg1, ARG2&& arg2) const {
             if(condition) {
-                if(auto t = m_targets) {
+                if(auto t = get_targets()) {
                     for(auto& i : *t) {
                         i.conn.call([&]() { i.target(std::forward<ARG1>(arg1), std::forward<ARG2>(arg2)); });
                     }
@@ -204,7 +204,7 @@ namespace signals {
         template<typename ARG1, typename ARG2, typename ARG3>
         inline void fire_if(bool condition, ARG1&& arg1, ARG2&& arg2, ARG3&& arg3) const {
             if(condition) {
-                if(auto t = m_targets) {
+                if(auto t = get_targets()) {
                     for(auto& i : *t) {
                         i.conn.call([&]() { i.target(std::forward<ARG1>(arg1), std::forward<ARG2>(arg2), std::forward<ARG3>(arg3)); });
                     }
@@ -219,7 +219,7 @@ namespace signals {
         template<typename ARG1, typename ARG2, typename ARG3, typename ARG4>
         inline void fire_if(bool condition, ARG1&& arg1, ARG2&& arg2, ARG3&& arg3, ARG4&& arg4) const {
             if(condition) {
-                if(auto t = m_targets) {
+                if(auto t = get_targets()) {
                     for(auto& i : *t) {
                         i.conn.call([&]() { i.target(std::forward<ARG1>(arg1), std::forward<ARG2>(arg2), std::forward<ARG3>(arg3), std::forward<ARG4>(arg4)); });
                     }
@@ -234,7 +234,7 @@ namespace signals {
         template<typename ARG1, typename ARG2, typename ARG3, typename ARG4, typename ARG5>
         inline void fire_if(bool condition, ARG1&& arg1, ARG2&& arg2, ARG3&& arg3, ARG4&& arg4, ARG5&& arg5) const {
             if(condition) {
-                if(auto t = m_targets) {
+                if(auto t = get_targets()) {
                     for(auto& i : *t) {
                         i.conn.call([&]() { i.target(std::forward<ARG1>(arg1), std::forward<ARG2>(arg2), std::forward<ARG3>(arg3), std::forward<ARG4>(arg4), std::forward<ARG5>(arg5)); });
                     }
@@ -260,7 +260,7 @@ namespace signals {
             std::unique_lock<std::mutex> lock1(m_write_targets_mutex,   std::defer_lock);
             std::unique_lock<std::mutex> lock2(o.m_write_targets_mutex, std::defer_lock);
             std::lock(lock1, lock2);
- 
+
             m_targets = std::move(o.m_targets);
             return *this;
         }
@@ -278,6 +278,12 @@ namespace signals {
             connection conn;
             std::function<SIGNATURE> target;
         };
+
+    private:
+        std::shared_ptr<std::vector<connection_target>> get_targets() const {
+            std::lock_guard<std::mutex> lock(m_write_targets_mutex);
+            return m_targets;
+        }
 
         mutable std::mutex m_write_targets_mutex;
         std::shared_ptr<std::vector<connection_target>> m_targets;
